@@ -1,36 +1,39 @@
 import React from "react";
-import Image1 from "../../assets/Hero/women.jpg";
-import Image2 from "../../assets/Hero/Shopping.jpg";
-import Image3 from "../../assets/Hero/Sale.jpg";
 import Slider from "react-slick";
+import Image1 from "../../assets/products/SMW2.webp";
+import Image2 from "../../assets/products/WHF3.webp";
+import Image3 from "../../assets/products/SWSB4.webp";
 
 const ImageList = [
   {
     id: 1,
     img: Image1,
-    title: "Upto 50% off on all Men's Wear",
-    description:
-      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,",
+    subtitle: "Smart Wearable",
+    title: "Storm Call 2",
+    price: "Starting at ₹1,799",
+    highlight: "Health & Fitness",
   },
   {
     id: 2,
     img: Image2,
-    title: "30% off on all Women's Wear",
-    description:
-      "Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, ",
+    subtitle: "Wireless Headphones",
+    title: "Rockerz 650",
+    price: "Starting at ₹2,499",
+    highlight: "Pure Bass Sound",
   },
   {
     id: 3,
     img: Image3,
-    title: "70% off on all Product Sale",
-    description:
-      "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. ",
+    subtitle: "Party Speakers",
+    title: "Stone 1350",
+    price: "Starting at ₹5,999",
+    highlight: "Be the Life of Party",
   },
 ];
 
-const Hero = () => {
+const Hero = ({ handleOrderPopup }) => {
   var settings = {
-    dots: false,
+    dots: true,
     arrows: false,
     infinite: true,
     speed: 800,
@@ -41,43 +44,50 @@ const Hero = () => {
     pauseOnHover: false,
     pauseOnFocus: true,
   };
+
   return (
-    <div className="relative overflow-hidden min-h-[550px] sm:min-h-[650px] bg-gray-100 flex justify-center items-center dark:bg-gray-950 dark:text-white duration-200">
-      {/* background pattern */}
-      <div className="h-[700px] w-[700px] bg-primary/40 absolute -top-1/2 right-0 rounded-3xl rotate-45 -z-9"></div>
-      {/* hero section */}
-      <div className="container pb-8 sm:pb-0 ">
-        <Slider {...settings}>
-          {ImageList.map((data) => (
-            <div>
-              <div className="grid grid-cols-1 sm:grid-cols-2">
-                {/* text content section */}
-                <div className="flex flex-col justify-center gap-4 pt-12 sm:pt-0 text-center sm:text-left order-2 sm:order-1 relative z-10">
-                  <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold ">
-                    {data.title}
-                  </h1>
-                  <p className="text-sm">{data.description}</p>
-                  <div>
-                    <button className="bg-gradient-to-r from-primary to-secondary hover:scale-105 duration-200 text-white py-2 px-4 rounded-full">
-                      Order Now
-                    </button>
-                  </div>
+    <div className="relative overflow-hidden bg-gray-100 dark:bg-gray-950 duration-200">
+      <Slider {...settings}>
+        {ImageList.map((data) => (
+          <div key={data.id} className="relative w-full outline-none">
+            {/* Full Width Banner Container */}
+            <div className="relative h-[400px] sm:h-[500px] md:h-[600px] w-full bg-black">
+                {/* Background Image (Using object-cover for banner effect) */}
+                <img 
+                    src={data.img} 
+                    alt={data.title}
+                    className="absolute inset-0 w-full h-full object-cover opacity-60"
+                />
+                
+                {/* Text Overlay */}
+                <div className="absolute inset-0 flex items-center">
+                    <div className="container text-white p-4">
+                        <div className="max-w-lg space-y-4">
+                            <p className="text-lg font-medium tracking-wide text-brandGray uppercase" data-aos="fade-up">{data.subtitle}</p>
+                            <h1 className="text-5xl md:text-7xl font-bold uppercase leading-tight" data-aos="fade-up" data-aos-delay="100">
+                                {data.title}
+                            </h1>
+                            <h2 className="text-2xl md:text-3xl font-bold text-red-500 uppercase" data-aos="fade-up" data-aos-delay="200">
+                                {data.highlight}
+                            </h2>
+                            <p className="text-xl font-semibold" data-aos="fade-up" data-aos-delay="300">
+                                {data.price}
+                            </p>
+                            <div data-aos="fade-up" data-aos-delay="400">
+                                <button
+                                    onClick={handleOrderPopup}
+                                    className="bg-primary hover:bg-secondary text-white py-3 px-8 rounded-full font-bold uppercase tracking-wider transition-transform hover:scale-105"
+                                >
+                                    Shop Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                {/* image Section */}
-                <div className="order-1 sm:order-2 ">
-                  <div className="relative z-10 ">
-                    <img
-                      src={data.img}
-                      alt=""
-                      className="w-[300px] h-[300px] sm:h-[450px] sm:w-[450px] sm:scale-125 lg:scale-120 object-contain mx-auto"
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
-          ))}
-        </Slider>
-      </div>
+          </div>
+        ))}
+      </Slider>
     </div>
   );
 };

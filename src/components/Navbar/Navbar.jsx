@@ -1,125 +1,130 @@
-import React from "react";
-import Logo from "../../assets/Logo.png";
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { toggleCart } from "../../redux/slices/cartSlice";
 import { IoMdSearch } from "react-icons/io";
-import { FaCaretDown, FaCartShopping } from "react-icons/fa6";
-import DarkMode from "./DarkMode";
+import { FaCartShopping } from "react-icons/fa6";
+import { FaUser, FaChevronDown } from "react-icons/fa"; 
+import ProductsData from "../../data/products";
+import { Link } from "react-router-dom";
 
-const Menu = [
-  {
-    id: 1,
-    name: "Home",
-    link: "/#",
-  },
-  {
-    id: 2,
-    name: "Top Rated",
-    link: "/services",
-  },
-  {
-    id: 3,
-    name: "Kids Wear",
-    link: "/#",
-  },
-  {
-    id: 3,
-    name: "Mens Wear",
-    link: "/#",
-  },
-  {
-    id: 3,
-    name: "Electronics",
-    link: "/#",
-  },
-];
+const Navbar = ({ handleOrderPopup }) => {
+  const dispatch = useDispatch();
+  const cartItems = useSelector((state) => state.cart.cartItems);
+  const cartCount = cartItems.length;
+  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
 
-const DropdownLInks = [
-  {
-    id :1,
-    name: "Trending Products",
-    link: "/#",
-  },
-  {
-    id :2,
-    name: "Best Selling",
-    link: "/#",
-  },
-  {
-    id :3,
-    name: "Top Rated",
-    link: "/#",
-  },
-];
-const Navbar = () => {
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchTerm.length > 0) {
+        const filteredSuggestions = ProductsData.filter((product) =>
+          product.title.toLowerCase().includes(searchTerm.toLowerCase())
+        ).slice(0, 5);
+        setSuggestions(filteredSuggestions);
+      } else {
+        setSuggestions([]);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setSearchTerm(suggestion.title);
+    setSuggestions([]);
+  };
+
   return (
-    <div className=" shadow-md bg-white dark:bg-gray-900 dark:text-white duration-200 relative z-40 ">
-      {/* upper Navbar */}
-      <div className="bg-primary/40 py-2 ">
-        <div className=" container flex justify-between items-center ">
-          <div>
-            <a href="#" className="font-bold text-2xl sm:text-3xl flex gap-2 ">
-              <img src={Logo} alt="Logo Image" className="w-10" />
-              Shopse
-            </a>
-          </div>
-          {/* search bar */}
-          <div className="flex justify-between items-center gap-4 ">
-            <div className="relative group hidden sm:block">
-              <input
-                type="text"
-                placeholder="search"
-                className="w-[200px] sm:w-[200px] group-hover:w-[300px] transition-all duration-300 rounded-full border border-gray-400 px-2 py-1 focus:outline-none focus:border-1 focus:border-primary dark:border-gray-500 dark:bg-gray-800"
-              />
-              <IoMdSearch className=" text-gray-500 group-hover:text-primary absolute top-1/2 -translate-y-1/2 right-3" />
+    <div className="bg-white sticky top-0 z-50 shadow-sm font-outfit">
+      {/* Announcement Bar */}
+      <div className="bg-gray-100 text-center text-xs font-medium py-2">
+        Get 5% off on your first order. Use Code: <span className="font-bold">BOATHEAD</span>
+      </div>
+
+      {/* Main Navbar */}
+      <div className="container py-4 flex items-center justify-between gap-4">
+        {/* Left: Logo & Links */}
+        <div className="flex items-center gap-8">
+          {/* Logo */}
+          <Link to="/" className="text-3xl font-bold tracking-tighter hover:text-primary transition-colors">
+            boAt
+            <span className="text-primary absolute -mt-1 ml-0 text-3xl">.</span>
+          </Link>
+
+          {/* Desktop Menu */}
+          <div className="hidden lg:flex items-center gap-6 text-sm font-medium text-black">
+            <div className="group relative cursor-pointer flex items-center gap-1 hover:text-primary">
+              Categories <FaChevronDown className="text-xs transition-transform group-hover:rotate-180" />
+              {/* Simple dropdown placeholder */}
+              <div className="absolute top-full left-0 hidden group-hover:block bg-white shadow-lg p-4 w-52 rounded-md mt-2 border z-50">
+                <Link to="/category/True%20Wireless%20Earbuds" className="block py-1 hover:text-primary">True Wireless Earbuds</Link>
+                <Link to="/category/Wireless%20Headphones" className="block py-1 hover:text-primary">Wireless Headphones</Link>
+                <Link to="/category/Smart%20Watches" className="block py-1 hover:text-primary">Smart Watches</Link>
+                <Link to="/category/Neckbands" className="block py-1 hover:text-primary">Neckbands</Link>
+                <Link to="/category/Wireless%20Speakers" className="block py-1 hover:text-primary">Wireless Speakers</Link>
+              </div>
             </div>
-            {/* order button */}
-            <button
-              onClick={() => alert("Ordering not available yet")}
-              className=" bg-gradient-to-r from-primary to-secondary transition-all duration-200 text-white py-1  px-4 rounded-full flex items-center gap-3 group"
-            >
-              <span className="group-hover:block hidden transition-all duration-200 ">
-                Order
-              </span>
-              <FaCartShopping className="text-xl text-white  drop-shadow-sm cursor-pointer" />
-            </button>
-            {/* Darkmode Switch */}
-            <div>
-              <DarkMode />
-            </div>
+
           </div>
         </div>
-      </div>
-      {/* Lower Navbar */}
-      <div className=" flex justify-center">
-        <ul className=" sm:flex hidden items-center gap-4">
-          {Menu.map((data) => (
-            <li key={data.id}>
-              <a
-                href={data.link}
-                className="inline-block px-4 hover:text-primary duration-200"
-              >
-                {data.name}
-              </a>
-            </li>
-          ))}
-          {/* Simple dropdown And links */}
-          <li className="group relative cursor-pointer ">
-            <a href="#" className="flex items-center gap-[2px] py-2">
-              Trending Products
-              <span>
-                <FaCaretDown className="transition-all duration-200 group-hover:rotate-180" />
-              </span>
-            </a>
-            <div className="absolute z-[9999] hidden group-hover:block w-[200px] rounded-md bg-white p-2 text-black shadow-md">
-              <ul>
-                {DropdownLInks.map((data) => (
-                  <li key={data.id}>
-                    <a href={data.link} className="inline-block w-full rounded-md p-2 hover:bg-primary/20 ">{data.name}</a>
-                  </li>
-                ))}
-              </ul>
+
+        {/* Right: Search & Actions */}
+        <div className="flex items-center gap-6">
+            {/* Search Bar */}
+            <div className="relative hidden md:block">
+                <input 
+                    type="text" 
+                    placeholder="Search Products"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    className="bg-gray-100 text-sm px-4 py-2 pl-10 rounded-full w-[250px] focus:outline-none focus:ring-1 focus:ring-black"
+                    aria-label="Search Products"
+                />
+                <IoMdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-lg" />
+                
+                {suggestions.length > 0 && (
+                    <ul className="absolute left-0 top-12 w-full bg-white text-black border border-gray-100 rounded-md shadow-lg z-50">
+                    {suggestions.map((product) => (
+                        <Link 
+                            to={`/product/${product.id}`} 
+                            key={product.id}
+                            className="block px-4 py-2 cursor-pointer hover:bg-gray-50 text-sm"
+                            onClick={() => {
+                                handleSuggestionClick(product);
+                            }}
+                        >
+                            {product.title}
+                        </Link>
+                    ))}
+                    </ul>
+                )}
             </div>
-          </li>
-        </ul>
+
+            {/* Icons */}
+            <div className="flex items-center gap-5">
+                <Link to="/login" className="text-2xl hover:text-primary transition-colors" aria-label="Login or User Profile">
+                    <FaUser className="text-lg" />
+                </Link>
+                <button 
+                  onClick={() => dispatch(toggleCart())} 
+                  className="text-2xl relative hover:text-primary transition-colors"
+                  aria-label={`Open Cart, ${cartCount} items`}
+                >
+                    <FaCartShopping className="text-lg" />
+                    {cartCount > 0 && (
+                       <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center justify-center min-w-[18px]">
+                        {cartCount}
+                       </span>
+                    )}
+                </button>
+            </div>
+        </div>
       </div>
     </div>
   );
