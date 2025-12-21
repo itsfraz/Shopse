@@ -2,11 +2,13 @@ import React from "react";
 import { FaTimes } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { removeFromCart, updateQuantity, toggleCart } from "../../redux/slices/cartSlice";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const CartSidebar = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // Add hook
   const { cartItems, isCartOpen } = useSelector((state) => state.cart);
+  const { isAuthenticated } = useSelector((state) => state.auth); // Get auth state
   
   const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
@@ -62,9 +64,20 @@ const CartSidebar = () => {
           <span className="text-lg font-semibold">Total:</span>
           <span className="text-lg font-semibold">₹{totalPrice.toFixed(2)}</span>
         </div>
-        <Link to="/checkout" onClick={() => dispatch(toggleCart())} className="block w-full bg-primary text-center text-white py-2 rounded-md hover:bg-primary/80 transition-colors duration-200">
+        <button 
+          onClick={() => {
+              dispatch(toggleCart());
+              if (!isAuthenticated) {
+                  alert("Please login to place an order!");
+                  navigate("/login");
+              } else {
+                  navigate("/checkout");
+              }
+          }} 
+          className="block w-full bg-primary text-center text-white py-2 rounded-md hover:bg-primary/80 transition-colors duration-200"
+        >
           Proceed to Checkout
-        </Link>
+        </button>
         <Link to="/cart" onClick={() => dispatch(toggleCart())} className="block w-full text-center text-primary border border-primary mt-2 py-2 rounded-md hover:bg-primary/10 transition-colors duration-200">
           View Cart
         </Link>

@@ -37,8 +37,46 @@ const ScrollToTop = () => {
   return null;
 };
 
+import { useDispatch } from "react-redux";
+import { login, logout } from "./redux/slices/authSlice";
+
 const App = () => {
   const [orderPopup, setOrderPopup] = React.useState(false);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("token");
+      
+      // Fix: If no token but we think we are logged in, force logout to clear stale state
+      if (!token) {
+          dispatch(logout());
+          return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          const userData = await res.json();
+          // Sync Redux with fresh data from server
+          dispatch(login(userData)); 
+        } else {
+          // Token invalid/expired
+          localStorage.removeItem("token");
+          // Also clear user from localStorage (handled by logout reducer)
+          dispatch(logout());
+        }
+      } catch (error) {
+         console.error("Auth check failed", error);
+      }
+    };
+    
+    checkAuth();
+  }, [dispatch]);
 
   // Redux replaced local state for Cart and Wishlist
   

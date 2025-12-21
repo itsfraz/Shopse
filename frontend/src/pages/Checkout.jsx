@@ -1,12 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { clearCart } from "../redux/slices/cartSlice";
+import { logout } from "../redux/slices/authSlice";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.cartItems);
+  const { isAuthenticated } = useSelector((state) => state.auth); // Auth check
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+        alert("Please login to access checkout.");
+        navigate("/login");
+    }
+  }, [isAuthenticated, navigate]);
+
   const totalPrice = cartItems?.reduce((acc, item) => acc + item.price * item.quantity, 0) || 0;
   const grandTotal = (totalPrice * 1.18).toFixed(2);
 
@@ -27,13 +37,72 @@ const Checkout = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate payment processing
-    setTimeout(() => {
-      dispatch(clearCart());
-      navigate('/order-success', { state: { orderId: Math.floor(Math.random() * 100000) } });
-    }, 1500);
+    
+    // Prepare Order Payload
+    const orderData = {
+        orderItems: cartItems.map(item => ({
+            name: item.title,
+            qty: item.quantity,
+            img: item.img,
+            price: item.price,
+            product: item.id // Assuming item.id is usable as minimal Product ID for now
+        })),
+        shippingAddress: {
+            address: formData.address,
+            city: formData.city,
+            postalCode: formData.zip,
+            country: 'India'
+        },
+        paymentMethod: 'Card',
+        itemsPrice: totalPrice,
+        taxPrice: totalPrice * 0.18,
+        shippingPrice: 0,
+        totalPrice: parseFloat(grandTotal)
+    };
+
+    try {
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            console.error("Checkout Attempt Failed: No token found in localStorage.");
+            alert("Your session has expired or you are not logged in. Please login again.");
+            dispatch(logout());
+            navigate("/login");
+            return;
+        }
+
+        console.log("Submitting order with token:", token.substring(0, 10) + "...");
+
+        const res = await fetch('/api/orders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(orderData) 
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            dispatch(clearCart());
+            navigate('/order-success', { state: { orderId: data._id } });
+        } else {
+            const errData = await res.json();
+            if (res.status === 401) {
+                alert("Session expired. Please login again.");
+                localStorage.removeItem("token");
+                dispatch(logout()); // Ensure you import logout
+                navigate("/login");
+            } else {
+                alert("Order failed: " + (errData.message || "Unknown error"));
+            }
+        }
+    } catch (error) {
+        console.error("Order error", error);
+        alert("Something went wrong processing your order.");
+    }
   };
 
   if(!cartItems || cartItems.length === 0) {

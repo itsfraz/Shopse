@@ -31,7 +31,7 @@ const OrderSuccess = () => {
 
         <div className="space-y-3">
              <Link 
-                to="/profile" 
+                to="/profile?tab=orders" 
                 className="block w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800 transition-colors"
                 >
                 View Order History

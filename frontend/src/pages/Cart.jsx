@@ -114,12 +114,20 @@ const Cart = () => {
               </div>
             </div>
 
-            <Link 
-              to="/checkout"
+            <button 
+              onClick={() => {
+                const isAuthenticated = localStorage.getItem("token"); // Simple check or use Redux
+                if (!isAuthenticated) {
+                    alert("Please login to place an order!");
+                    navigate("/login");
+                } else {
+                    navigate("/checkout");
+                }
+              }}
               className="w-full block text-center bg-black hover:bg-gray-800 text-white font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95"
             >
               Proceed to Checkout
-            </Link>
+            </button>
           </div>
         </div>
       </div>

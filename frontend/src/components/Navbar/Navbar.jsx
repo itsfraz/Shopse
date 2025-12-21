@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleCart } from "../../redux/slices/cartSlice";
+import { logout } from "../../redux/slices/authSlice";
 import { IoMdSearch } from "react-icons/io";
 import { FaCartShopping } from "react-icons/fa6";
 import { FaUser, FaChevronDown } from "react-icons/fa"; 
@@ -10,11 +11,12 @@ import { Link } from "react-router-dom";
 const Navbar = ({ handleOrderPopup }) => {
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.cartItems);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
   const cartCount = cartItems.length;
   
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -108,9 +110,52 @@ const Navbar = ({ handleOrderPopup }) => {
 
             {/* Icons */}
             <div className="flex items-center gap-5">
-                <Link to="/login" className="text-2xl hover:text-primary transition-colors" aria-label="Login or User Profile">
-                    <FaUser className="text-lg" />
-                </Link>
+                {isAuthenticated ? (
+                    <div className="relative group cursor-pointer" onMouseEnter={() => setIsUserMenuOpen(true)} onMouseLeave={() => setIsUserMenuOpen(false)}>
+                        <div className="flex items-center gap-2 hover:text-primary transition-colors">
+                            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-sm">
+                                {user?.name ? user.name.charAt(0).toUpperCase() : <FaUser />}
+                            </div>
+                            <span className="text-sm font-medium hidden sm:block max-w-[100px] truncate capitalize">
+                                {user?.name || "User"}
+                            </span>
+                            <FaChevronDown className={`text-xs transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                        </div>
+
+                        {/* Dropdown Menu */}
+                        <div className={`absolute top-full right-0 w-48 bg-white shadow-xl rounded-xl mt-2 border border-gray-100 py-2 transition-all duration-200 origin-top-right z-50 ${isUserMenuOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}>
+                             <div className="px-4 py-3 border-b border-gray-100 mb-2">
+                                <p className="text-sm font-bold text-gray-900 truncate">{user?.name}</p>
+                                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                             </div>
+                             
+                             <Link to="/profile?tab=profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary">
+                                My Profile
+                             </Link>
+                             <Link to="/profile?tab=orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary">
+                                Orders
+                             </Link>
+                             
+                             <div className="border-t border-gray-100 mt-2 pt-2">
+                                <button 
+                                    onClick={() => dispatch(logout())}
+                                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium"
+                                >
+                                    Logout
+                                </button>
+                             </div>
+                        </div>
+                    </div>
+                ) : (
+                    <Link 
+                        to="/login" 
+                        className="text-2xl hover:text-primary transition-colors flex items-center gap-2" 
+                        aria-label="Login"
+                    >
+                        <FaUser className="text-lg" />
+                    </Link>
+                )}
+                
                 <button 
                   onClick={() => dispatch(toggleCart())} 
                   className="text-2xl relative hover:text-primary transition-colors"
