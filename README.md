@@ -26,7 +26,7 @@
 > *Add your application screenshots here. Showcase the Landing Page, Product Details, Cart, and Admin Dashboard.*
 
 <div align="center">
-  <img src="https://via.placeholder.com/800x400?text=Application+Screenshot+Here" alt="App Preview" width="100%" />
+  <img src="./project_preview.png" alt="App Preview" width="100%" />
 </div>
 
 ---
