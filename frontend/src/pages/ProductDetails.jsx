@@ -19,13 +19,36 @@ const ProductDetails = () => {
   const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
-    const foundProduct = ProductsData.find((item) => item.id === parseInt(id));
-    setTimeout(() => {
-      setProduct(foundProduct);
-      setSelectedImage(foundProduct?.img); // Set initial image
-      setLoading(false);
-    }, 500);
+    const fetchProduct = async () => {
+        setLoading(true);
+        try {
+            // First try fetching from API
+            const response = await fetch(`/api/products/${id}`);
+            if (response.ok) {
+                const data = await response.json();
+                setProduct(data);
+                setSelectedImage(data.images ? data.images[0] : data.img);
+            } else {
+                // Fallback to mock data if API fails or not found (legacy support)
+                const foundProduct = ProductsData.find((item) => item.id === parseInt(id));
+                if (foundProduct) {
+                    setProduct(foundProduct);
+                    setSelectedImage(foundProduct.img);
+                } else {
+                    setProduct(null);
+                }
+            }
+        } catch (error) {
+             console.error("Error fetching product", error);
+             // Fallback
+             const foundProduct = ProductsData.find((item) => item.id === parseInt(id));
+             setProduct(foundProduct || null);
+             if (foundProduct) setSelectedImage(foundProduct.img);
+        } finally {
+            setLoading(false);
+        }
+    };
+    fetchProduct();
   }, [id]);
 
   if (loading) {
@@ -54,12 +77,10 @@ const ProductDetails = () => {
   const cartItem = cartItems?.find((item) => item.id === product.id);
 
   // Mock Data for Gallery
-  const galleryImages = [
-    product.img,
-    product.img, // Duplicate for demo
-    product.img,
-    product.img
-  ];
+  // Handle Gallery Images (Backend 'images' array vs Mock 'img' string)
+  const galleryImages = product.images && product.images.length > 0 
+      ? product.images 
+      : [product.img, product.img, product.img, product.img].filter(Boolean);
 
   return (
     <div className="min-h-screen pt-14 pb-10 bg-gray-50 dark:bg-gray-900 dark:text-white font-outfit">
@@ -102,7 +123,7 @@ const ProductDetails = () => {
             {/* Right: Product Info */}
             <div className="flex flex-col gap-5">
                 <div>
-                   <h1 className="text-3xl md:text-4xl font-bold text-black dark:text-white mb-2">{product.title}</h1>
+                   <h1 className="text-3xl md:text-4xl font-bold text-black dark:text-white mb-2">{product.name || product.title}</h1>
                    <p className="text-gray-500 text-sm font-medium">{product.category} with Environment Noise Cancellation</p> 
                 </div>
 
@@ -223,7 +244,7 @@ const ProductDetails = () => {
                 {activeTab === "description" && (
                     <div className="space-y-4 animate-fade-in">
                         <h3 className="text-2xl font-bold text-black dark:text-white mb-2">Product Description</h3>
-                        <p>Experience the signature boAt sound with the new {product.title}. Designed for the audiophiles who refuse to compromise on quality, comfort, or style. With a playback time of up to 60 hours, enjoy uninterrupted music for days.</p>
+                        <p>{product.description || `Experience the signature boAt sound with the new ${product.name || product.title}. Designed for the audiophiles who refuse to compromise on quality, comfort, or style. With a playback time of up to 60 hours, enjoy uninterrupted music for days.`}</p>
                         <p>Equipped with the latest Bluetooth v5.3 for seamless connectivity and ASAP Charge technology that gives you 10 hours of playtime in just 10 minutes of charge.</p>
                         <h4 className="text-lg font-bold text-black dark:text-white mt-4">Key Features:</h4>
                         <ul className="list-disc pl-5 space-y-1">

@@ -10,10 +10,10 @@ const orderSchema = mongoose.Schema({
         {
             name: { type: String, required: true },
             qty: { type: Number, required: true },
-            img: { type: String, required: true },
+            image: { type: String, required: true },
             price: { type: Number, required: true },
             product: {
-                type: Number, // Changed from ObjectId to match simplified frontend IDs
+                type: String, // Using String to support both legacy numeric IDs and new ObjectId strings
                 required: true
             }
         }

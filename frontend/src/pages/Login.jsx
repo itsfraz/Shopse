@@ -6,18 +6,23 @@ import { login } from "../redux/slices/authSlice";
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { isAuthenticated } = useSelector((state) => state.auth); // Get auth state
+  const { isAuthenticated, user } = useSelector((state) => state.auth); // Get auth state
 
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      if (user?.role === 'admin') {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/");
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  React.useEffect(() => {
-      if(isAuthenticated) {
-          navigate("/");
-      }
-  }, [isAuthenticated, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -53,6 +58,7 @@ const Login = () => {
             // Save token
             localStorage.setItem('token', data.accessToken);
             
+
             // Dispatch to Redux (saves to localStorage 'user' too via slice logic)
             dispatch(login({
                 _id: data._id,
@@ -62,7 +68,11 @@ const Login = () => {
                 mobile: data.mobile
             }));
             
-            navigate("/"); 
+            if (data.role === 'admin') {
+                navigate("/admin/dashboard");
+            } else {
+                navigate("/"); 
+            } 
         } else {
             setError(data.message || "Login failed");
         }

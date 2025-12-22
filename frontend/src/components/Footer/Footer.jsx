@@ -8,19 +8,23 @@ import {
   FaLinkedin,
 } from "react-icons/fa";
 
+import { useSettings } from "../../context/SettingsContext";
+
 const Footer = () => {
+  const { settings } = useSettings();
+
   return (
-    <div className="bg-gray-100 text-black pt-16 pb-8 font-outfit">
+    <div className="bg-white dark:bg-gray-900 text-black dark:text-gray-300 pt-16 pb-8 font-outfit border-t border-gray-100 dark:border-gray-800">
       <div className="container">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           {/* Logo & Pitch */}
           <div className="col-span-1 md:col-span-1">
-             <h1 className="text-3xl font-bold tracking-tighter mb-4">
-                boAt
+             <h1 className="text-3xl font-bold tracking-tighter mb-4 dark:text-white">
+                {settings?.siteName || "boAt"}
                 <span className="text-primary absolute -mt-1 ml-0 text-3xl">.</span>
              </h1>
-             <p className="text-sm text-gray-600 mb-6">
-               Subscribe to our email alerts!
+             <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+               {settings?.metaDescription || "Subscribe to our email alerts!"}
              </p>
              <div className="flex bg-white rounded-md border border-gray-300 overflow-hidden max-w-xs">
                 <input 

@@ -39,11 +39,13 @@ const Profile = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Fetch Orders
+  // Fetch Orders with Polling
   useEffect(() => {
     if (activeTab === "orders" && isAuthenticated) {
-        const fetchOrders = async () => {
-            setLoadingOrders(true);
+        setLoadingOrders(true);
+        
+        const fetchOrders = async (silent = false) => {
+            if (!silent) setLoadingOrders(true);
             try {
                 const token = localStorage.getItem("token");
                 const res = await fetch('/api/orders/myorders', {
@@ -53,18 +55,31 @@ const Profile = () => {
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    setOrders(data);
+                    setOrders(prev => {
+                        // Only update if length changed or status changed (simple check)
+                        if (JSON.stringify(prev) !== JSON.stringify(data)) return data;
+                        return prev;
+                    });
                 } else {
-                    setOrderError("Failed to fetch orders");
+                    if (!silent) setOrderError("Failed to fetch orders");
                 }
             } catch (err) {
                 console.error(err);
-                setOrderError("Something went wrong");
+                if (!silent) setOrderError("Something went wrong");
             } finally {
-                setLoadingOrders(false);
+                if (!silent) setLoadingOrders(false);
             }
         };
+
+        // Initial fetch
         fetchOrders();
+
+        // Poll every 5 seconds
+        const intervalId = setInterval(() => {
+            fetchOrders(true);
+        }, 5000);
+
+        return () => clearInterval(intervalId);
     }
   }, [activeTab, isAuthenticated]);
 
@@ -216,7 +231,7 @@ const Profile = () => {
                                             <div key={i} className="flex gap-4 items-center">
                                                 <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-lg p-2 flex-shrink-0">
                                                     {/* Fallback image if item.img is broken/missing, though backend requires it */}
-                                                    <img src={item.img} className="w-full h-full object-contain" alt={item.name} />
+                                                    <img src={item.image || item.img} className="w-full h-full object-contain" alt={item.name} />
                                                 </div>
                                                 <div className="flex-1">
                                                     <p className="font-bold dark:text-white line-clamp-1">{item.name}</p>

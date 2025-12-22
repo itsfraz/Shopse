@@ -43,11 +43,11 @@ const Checkout = () => {
     // Prepare Order Payload
     const orderData = {
         orderItems: cartItems.map(item => ({
-            name: item.title,
+            name: item.title || item.name,
             qty: item.quantity,
-            img: item.img,
+            image: item.img || (item.images && item.images[0]), // Backend expects 'image' not 'img' sometimes, let's check schema
             price: item.price,
-            product: item.id // Assuming item.id is usable as minimal Product ID for now
+            product: item.id || item._id // ID fallback
         })),
         shippingAddress: {
             address: formData.address,
@@ -220,9 +220,9 @@ const Checkout = () => {
                     {cartItems.map(item => (
                         <div key={item.id} className="flex justify-between items-center bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                             <div className="flex items-center gap-3">
-                                <img src={item.img} alt={item.title} className="w-12 h-12 object-contain bg-white rounded-md p-1" />
+                                <img src={item.img || (item.images && item.images[0])} alt={item.title || item.name} className="w-12 h-12 object-contain bg-white rounded-md p-1" />
                                 <div>
-                                    <h4 className="font-bold text-sm dark:text-white line-clamp-1">{item.title}</h4>
+                                    <h4 className="font-bold text-sm dark:text-white line-clamp-1">{item.title || item.name}</h4>
                                     <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
                                 </div>
                             </div>

@@ -5,36 +5,56 @@ import { logout } from "../../redux/slices/authSlice";
 import { IoMdSearch } from "react-icons/io";
 import { FaCartShopping } from "react-icons/fa6";
 import { FaUser, FaChevronDown } from "react-icons/fa"; 
-import ProductsData from "../../data/products";
 import { Link, useNavigate } from "react-router-dom";
+import { useSettings } from "../../context/SettingsContext";
 
 const Navbar = ({ handleOrderPopup }) => {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate();
   const cartItems = useSelector((state) => state.cart.cartItems);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const cartCount = cartItems.length;
   
+  const { settings } = useSettings();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
 
+  // Fetch Categories on Mount
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        if (response.ok) {
+           const data = await response.json();
+           setCategories(data);
+        }
+      } catch (error) {
+         console.error("Error fetching categories", error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Search Logic with API
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
       if (searchTerm.trim().length > 0) {
-        const lowerTerm = searchTerm.toLowerCase().trim();
-        
-        const filteredSuggestions = ProductsData.filter((product) =>
-             product.title.toLowerCase().includes(lowerTerm) || 
-             product.category.toLowerCase().includes(lowerTerm) ||
-             (product.color && product.color.toLowerCase().includes(lowerTerm))
-        ).slice(0, 6); // Limiting to top 6 results
-        
-        setSuggestions(filteredSuggestions);
+        try {
+            const response = await fetch(`/api/products?keyword=${encodeURIComponent(searchTerm)}&pageSize=6`);
+            if (response.ok) {
+                const data = await response.json();
+                setSuggestions(data.products || []);
+            }
+        } catch (error) {
+            console.error("Search failed", error);
+        }
       } else {
         setSuggestions([]);
       }
-    }, 200); // Faster 200ms debounce for "realtime" feel
+    }, 300);
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
@@ -44,14 +64,14 @@ const Navbar = ({ handleOrderPopup }) => {
   };
 
   const handleSuggestionClick = (suggestion) => {
-    setSearchTerm(""); // Clear search bar after selection or keep title? Usually clear or set to title.
+    setSearchTerm(""); 
     setSuggestions([]);
   };
 
   return (
-    <div className="bg-white sticky top-0 z-50 shadow-sm font-outfit">
+    <div className="bg-white dark:bg-gray-900 sticky top-0 z-50 shadow-sm font-outfit transition-colors duration-200">
       {/* Announcement Bar */}
-      <div className="bg-gray-100 text-center text-xs font-medium py-2">
+      <div className="bg-gray-100 dark:bg-gray-800 text-center text-xs font-medium py-2 dark:text-gray-300">
         Get 5% off on your first order. Use Code: <span className="font-bold">BOATHEAD</span>
       </div>
 
@@ -60,22 +80,28 @@ const Navbar = ({ handleOrderPopup }) => {
         {/* Left: Logo & Links */}
         <div className="flex items-center gap-8">
           {/* Logo */}
-          <Link to="/" className="text-3xl font-bold tracking-tighter hover:text-primary transition-colors">
-            boAt
+          <Link to="/" className="text-3xl font-bold tracking-tighter hover:text-primary transition-colors dark:text-white">
+            {settings?.siteName || "boAt"}
             <span className="text-primary absolute -mt-1 ml-0 text-3xl">.</span>
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center gap-6 text-sm font-medium text-black">
+          <div className="hidden lg:flex items-center gap-6 text-sm font-medium text-black dark:text-gray-200">
             <div className="group relative cursor-pointer flex items-center gap-1 hover:text-primary">
               Categories <FaChevronDown className="text-xs transition-transform group-hover:rotate-180" />
-              {/* Simple dropdown placeholder */}
-              <div className="absolute top-full left-0 hidden group-hover:block bg-white shadow-lg p-4 w-52 rounded-md mt-2 border z-50">
-                <Link to="/category/True%20Wireless%20Earbuds" className="block py-1 hover:text-primary">True Wireless Earbuds</Link>
-                <Link to="/category/Wireless%20Headphones" className="block py-1 hover:text-primary">Wireless Headphones</Link>
-                <Link to="/category/Smart%20Watches" className="block py-1 hover:text-primary">Smart Watches</Link>
-                <Link to="/category/Neckbands" className="block py-1 hover:text-primary">Neckbands</Link>
-                <Link to="/category/Wireless%20Speakers" className="block py-1 hover:text-primary">Wireless Speakers</Link>
+              {/* Dropdown from API */}
+              <div className="absolute top-full left-0 hidden group-hover:block bg-white dark:bg-gray-800 shadow-lg p-4 w-52 rounded-md mt-2 border border-gray-100 dark:border-gray-700 z-50 max-h-80 overflow-y-auto">
+                {categories.length > 0 ? categories.map((cat) => (
+                    <Link 
+                        key={cat._id} 
+                        to={`/category/${cat.name}`} 
+                        className="block py-2 hover:text-primary dark:text-gray-300 dark:hover:text-primary border-b border-gray-100 dark:border-gray-700 last:border-none"
+                    >
+                        {cat.name}
+                    </Link>
+                )) : (
+                    <span className="text-gray-400 text-xs">Loading...</span>
+                )}
               </div>
             </div>
 
@@ -88,7 +114,7 @@ const Navbar = ({ handleOrderPopup }) => {
             <div className="relative hidden md:block group">
                 <input 
                     type="text" 
-                    placeholder="Search for products, brands and more"
+                    placeholder="Search for products..."
                     value={searchTerm}
                     onChange={handleSearchChange}
                     onKeyDown={(e) => {
@@ -97,34 +123,35 @@ const Navbar = ({ handleOrderPopup }) => {
                             navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
                         }
                     }}
-                    className="bg-gray-100/50 border border-gray-200 text-sm px-4 py-2.5 pl-10 rounded-full w-[300px] lg:w-[400px] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    className="bg-gray-100/50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm px-4 py-2.5 pl-10 rounded-full w-[300px] lg:w-[400px] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all dark:text-white"
                     aria-label="Search Products"
                 />
                 <IoMdSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
                 
                 {suggestions.length > 0 && (
-                    <div className="absolute left-0 top-full mt-2 w-full bg-white text-black border border-gray-100 rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <div className="absolute left-0 top-full mt-2 w-full bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-100 dark:border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden">
                         {suggestions.map((product) => (
                             <Link 
-                                to={`/product/${product.id}`} 
-                                key={product.id}
-                                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+                                to={`/product/${product._id || product.id}`} 
+                                key={product._id || product.id}
+                                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-50 dark:border-gray-700 last:border-0"
                                 onClick={() => handleSuggestionClick(product)}
                             >
-                                <div className="w-10 h-10 bg-gray-100 rounded-md p-1 flex-shrink-0">
-                                    <img src={product.img} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-md p-1 flex-shrink-0">
+                                    <img src={product.images ? product.images[0] : (product.img || '')} alt="" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                                
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-900 truncate">{product.title}</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{product.name || product.title}</p>
                                     <p className="text-xs text-gray-500 truncate">{product.category}</p>
                                 </div>
                                 <div className="text-xs font-bold text-primary">
-                                    ₹{product.price}
+                                    {settings?.currency || "₹"}{product.price}
                                 </div>
                             </Link>
                         ))}
                         <div 
-                            className="bg-gray-50 px-4 py-2 text-xs text-center text-gray-500 hover:text-primary cursor-pointer border-t border-gray-100"
+                            className="bg-gray-50 dark:bg-gray-700 px-4 py-2 text-xs text-center text-gray-500 dark:text-gray-300 hover:text-primary cursor-pointer border-t border-gray-100 dark:border-gray-700"
                             onClick={() => {
                                 setSuggestions([]);
                                 navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
@@ -137,7 +164,7 @@ const Navbar = ({ handleOrderPopup }) => {
             </div>
 
             {/* Icons */}
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-5 text-black dark:text-white">
                 {isAuthenticated ? (
                     <div className="relative group cursor-pointer" onMouseEnter={() => setIsUserMenuOpen(true)} onMouseLeave={() => setIsUserMenuOpen(false)}>
                         <div className="flex items-center gap-2 hover:text-primary transition-colors">
@@ -151,23 +178,29 @@ const Navbar = ({ handleOrderPopup }) => {
                         </div>
 
                         {/* Dropdown Menu */}
-                        <div className={`absolute top-full right-0 w-48 bg-white shadow-xl rounded-xl mt-2 border border-gray-100 py-2 transition-all duration-200 origin-top-right z-50 ${isUserMenuOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}>
-                             <div className="px-4 py-3 border-b border-gray-100 mb-2">
-                                <p className="text-sm font-bold text-gray-900 truncate">{user?.name}</p>
+                        <div className={`absolute top-full right-0 w-48 bg-white dark:bg-gray-800 shadow-xl rounded-xl mt-2 border border-gray-100 dark:border-gray-700 py-2 transition-all duration-200 origin-top-right z-50 ${isUserMenuOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}>
+                             <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 mb-2">
+                                <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user?.name}</p>
                                 <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                              </div>
                              
-                             <Link to="/profile?tab=profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary">
+                             {user?.role === 'admin' && (
+                                <Link to="/admin/dashboard" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary">
+                                    Admin Panel
+                                </Link>
+                             )}
+
+                             <Link to="/profile?tab=profile" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary">
                                 My Profile
                              </Link>
-                             <Link to="/profile?tab=orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary">
+                             <Link to="/profile?tab=orders" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary">
                                 Orders
                              </Link>
                              
-                             <div className="border-t border-gray-100 mt-2 pt-2">
+                             <div className="border-t border-gray-100 dark:border-gray-700 mt-2 pt-2">
                                 <button 
                                     onClick={() => dispatch(logout())}
-                                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium"
+                                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-medium"
                                 >
                                     Logout
                                 </button>

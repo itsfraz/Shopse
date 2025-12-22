@@ -12,9 +12,9 @@ const useProductFiltering = (products, initialCategory = 'All', searchQuery = ''
     if (searchQuery) {
         const lowerQuery = searchQuery.toLowerCase().trim();
         result = result.filter(product => 
-            product.title.toLowerCase().includes(lowerQuery) ||
+            product.name.toLowerCase().includes(lowerQuery) ||
             product.category.toLowerCase().includes(lowerQuery) ||
-            (product.color && product.color.toLowerCase().includes(lowerQuery))
+            (product.description && product.description.toLowerCase().includes(lowerQuery))
         );
     }
 
@@ -24,7 +24,10 @@ const useProductFiltering = (products, initialCategory = 'All', searchQuery = ''
     }
 
     // Rating Filter
-    result = result.filter((product) => product.rating >= filterRating);
+    // Rating Filter (handling missing rating validation)
+    if (filterRating > 0) {
+        result = result.filter((product) => (product.rating || 0) >= filterRating);
+    }
 
     // Sorting
     if (sortOption === "price-asc") {
@@ -32,10 +35,11 @@ const useProductFiltering = (products, initialCategory = 'All', searchQuery = ''
     } else if (sortOption === "price-desc") {
         result.sort((a, b) => b.price - a.price);
     } else if (sortOption === "newest") {
-        result.sort((a, b) => b.id - a.id);
+        result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     } else {
         // Default to popularity
-        result.sort((a, b) => b.rating - a.rating);
+        // Default to popularity (or random if no rating)
+        result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     }
 
     return result;

@@ -29,9 +29,9 @@ const CartSidebar = () => {
         ) : (
           cartItems.map((item) => (
             <div key={item.id} className="flex items-center mb-4 border-b pb-4 border-gray-200 dark:border-gray-700 last:border-b-0">
-              <img src={item.img} alt={item.title} className="w-16 h-16 object-cover rounded-md mr-4" />
+              <img src={item.img || (item.images && item.images[0])} alt={item.title || item.name} className="w-16 h-16 object-cover rounded-md mr-4" />
               <div className="flex-grow">
-                <h3 className="font-semibold">{item.title}</h3>
+                <h3 className="font-semibold">{item.title || item.name}</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">₹{item.price} x {item.quantity}</p>
                 <div className="flex items-center mt-1">
                   <button

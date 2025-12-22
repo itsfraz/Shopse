@@ -1,12 +1,36 @@
 import React, { useState, useEffect } from "react";
-import ProductsData from "../../data/products";
 import useProductFiltering from "../../hooks/useProductFiltering";
 import ProductCard from "./ProductCard";
 
 const Products = ({ category, limit, searchQuery }) => {
+  const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = limit ? limit : 8; // Use limit if provided
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        // Fetch a large number to support client-side filtering for now
+        const response = await fetch('/api/products?pageSize=100');
+        const data = await response.json();
+        if (response.ok) {
+            // Filter inactive products if not admin (though backend doesn't filter by isActive for public route yet? Check controller: No it doesn't. 
+            // We should filter inactive products on frontend if backend sends them.
+            // Also map ID if needed, but we decided to handle _id in ProductCard.
+            // Let's rely on data.products property from the pagination response
+            const activeProducts = (data.products || []).filter(p => p.isActive !== false);
+            setProducts(activeProducts);
+        }
+      } catch (error) {
+        console.error("Failed to fetch products", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // Use custom hook for filtering logic
   const {
@@ -17,7 +41,7 @@ const Products = ({ category, limit, searchQuery }) => {
       sortOption,
       setSortOption,
       filteredProducts
-  } = useProductFiltering(ProductsData, category, searchQuery);
+  } = useProductFiltering(products, category, searchQuery);
 
   useEffect(() => {
     // Sync external category prop if it changes
@@ -26,14 +50,6 @@ const Products = ({ category, limit, searchQuery }) => {
     }
   }, [category, setFilterCategory]);
 
-  useEffect(() => {
-    // Simulate data fetching
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000); // 1 second loading time
-
-    return () => clearTimeout(timer);
-  }, []);
 
   // Reset page when filters change
   useEffect(() => {
@@ -67,12 +83,9 @@ const Products = ({ category, limit, searchQuery }) => {
   return (
     <div className="mt-14 mb-12">
       <div className="container">
-        {/* Breadcrumb would go here if needed, keeping it minimal for now */}
         
         {/* Filters and Sorting Bar */}
         <div className="flex flex-wrap justify-end items-center mb-6 gap-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
-          {/* Category Filter Removed as per request */}
-          
           <div className="flex gap-6">
             {/* Rating Filter */}
             <div className="flex items-center gap-2">
@@ -116,7 +129,7 @@ const Products = ({ category, limit, searchQuery }) => {
                   <div key={index} className="w-full"><SkeletonCard /></div>
                 ))
               : currentProducts.map((data) => (
-                  <div key={data.id} className="w-full">
+                  <div key={data._id || data.id} className="w-full">
                     <ProductCard data={data} />
                   </div>
                 ))}

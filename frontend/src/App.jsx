@@ -8,8 +8,22 @@ import "aos/dist/aos.css";
 
 import MobileBottomBar from "./components/Navbar/MobileBottomBar";
 
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import { Suspense, lazy } from "react";
+import { useDispatch } from "react-redux";
+import { login, logout } from "./redux/slices/authSlice";
+
+// Admin Imports
+const AdminGuard = lazy(() => import("./admin/components/AdminGuard"));
+// Lazy load Admin Pages
+const AdminLayout = lazy(() => import("./admin/layouts/AdminLayout"));
+const AdminDashboard = lazy(() => import("./admin/pages/AdminDashboard"));
+const ProductManagement = lazy(() => import("./admin/pages/ProductManagement"));
+const OrderManagement = lazy(() => import("./admin/pages/OrderManagement"));
+const UsersManagement = lazy(() => import("./admin/pages/UsersManagement"));
+const Settings = lazy(() => import("./admin/pages/Settings"));
+const Analytics = lazy(() => import("./admin/pages/Analytics"));
+const CategoryManagement = lazy(() => import("./admin/pages/CategoryManagement"));
 
 // Lazy loading pages
 const Home = lazy(() => import("./pages/Home"));
@@ -40,18 +54,30 @@ const ScrollToTop = () => {
   return null;
 };
 
-import { useDispatch } from "react-redux";
-import { login, logout } from "./redux/slices/authSlice";
+// User Layout Component
+const UserLayout = ({ handleOrderPopup, orderPopup, setOrderPopup }) => {
+    return (
+        <div className="bg-white dark:bg-gray-900 dark:text-white duration-200">
+            <Navbar handleOrderPopup={handleOrderPopup} />
+            <Outlet />
+            <Footer />
+            <Popup orderPopup={orderPopup} setOrderPopup={setOrderPopup} />
+            <CartSidebar />
+            <MobileBottomBar />
+        </div>
+    );
+};
+
+import { SettingsProvider } from "./context/SettingsContext";
 
 const App = () => {
-  const [orderPopup, setOrderPopup] = React.useState(false);
+  const [orderPopup, setOrderPopup] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("token");
       
-      // Fix: If no token but we think we are logged in, force logout to clear stale state
       if (!token) {
           dispatch(logout());
           return;
@@ -65,12 +91,9 @@ const App = () => {
         });
         if (res.ok) {
           const userData = await res.json();
-          // Sync Redux with fresh data from server
           dispatch(login(userData)); 
         } else {
-          // Token invalid/expired
           localStorage.removeItem("token");
-          // Also clear user from localStorage (handled by logout reducer)
           dispatch(logout());
         }
       } catch (error) {
@@ -80,14 +103,12 @@ const App = () => {
     
     checkAuth();
   }, [dispatch]);
-
-  // Redux replaced local state for Cart and Wishlist
   
   const handleOrderPopup = () => {
     setOrderPopup(!orderPopup);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     AOS.init({
       offset: 100,
       duration: 800,
@@ -99,37 +120,43 @@ const App = () => {
 
   return (
     <BrowserRouter>
+     <SettingsProvider>
       <ScrollToTop />
-      <div className="bg-white dark:bg-gray-900 dark:text-white duration-200">
-        <Navbar handleOrderPopup={handleOrderPopup} />
-        
+      <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen font-outfit">
         <Suspense fallback={<Loading />}>
           <Routes>
-            <Route path="/" element={
-              <Home 
-                handleOrderPopup={handleOrderPopup} 
-                orderPopup={orderPopup} 
-                setOrderPopup={setOrderPopup} 
-              />
-            } />
-            <Route path="/category/:category" element={<CategoryPage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/product/:id" element={<ProductDetails />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order-success" element={<OrderSuccess />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/wishlist" element={<Wishlist />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminGuard />}>
+                <Route element={<AdminLayout />}>
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<AdminDashboard />} />
+                    <Route path="products" element={<ProductManagement />} />
+                    <Route path="orders" element={<OrderManagement />} />
+                    <Route path="users" element={<UsersManagement />} />
+                    <Route path="analytics" element={<Analytics />} />
+                    <Route path="settings" element={<Settings />} />
+                    <Route path="categories" element={<CategoryManagement />} />
+                </Route>
+            </Route>
+
+            {/* Consumer App Routes */}
+            <Route element={<UserLayout handleOrderPopup={handleOrderPopup} orderPopup={orderPopup} setOrderPopup={setOrderPopup} />}>
+                <Route path="/" element={<Home handleOrderPopup={handleOrderPopup} />} />
+                <Route path="/category/:category" element={<CategoryPage />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/product/:id" element={<ProductDetails />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/order-success" element={<OrderSuccess />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/wishlist" element={<Wishlist />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+            </Route>
           </Routes>
         </Suspense>
-
-        <Footer />
-        <Popup orderPopup={orderPopup} setOrderPopup={setOrderPopup} />
-        <CartSidebar />
-        <MobileBottomBar />
       </div>
+     </SettingsProvider>
     </BrowserRouter>
   );
 };
