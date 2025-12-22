@@ -23,11 +23,14 @@ const Wishlist = lazy(() => import("./pages/Wishlist"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 
+const SearchPage = lazy(() => import("./pages/SearchPage"));
+
 const Loading = () => (
   <div className="h-screen w-full flex items-center justify-center bg-white dark:bg-gray-900">
     <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
   </div>
 );
+
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -110,6 +113,7 @@ const App = () => {
               />
             } />
             <Route path="/category/:category" element={<CategoryPage />} />
+            <Route path="/search" element={<SearchPage />} />
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />

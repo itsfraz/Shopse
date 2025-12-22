@@ -139,9 +139,51 @@ const getMe = asyncHandler(async (req, res) => {
         name: req.user.name,
         email: req.user.email,
         mobile: req.user.mobile,
+        address: req.user.address, // Include address
         role: req.user.role
     };
     res.status(200).json(user);
+});
+
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+// @access  Private
+const updateUserProfile = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+        user.name = req.body.name || user.name;
+        user.mobile = req.body.mobile || user.mobile;
+        
+        if (req.body.address) {
+            user.address = {
+                street: req.body.address.street || user.address?.street,
+                city: req.body.address.city || user.address?.city,
+                state: req.body.address.state || user.address?.state,
+                zip: req.body.address.zip || user.address?.zip,
+                country: req.body.address.country || user.address?.country
+            };
+        }
+
+        if (req.body.password) {
+            user.password = req.body.password;
+        }
+
+        const updatedUser = await user.save();
+
+        res.json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            mobile: updatedUser.mobile,
+            address: updatedUser.address,
+            role: updatedUser.role,
+            accessToken: generateAccessToken(updatedUser._id) // Optional: Issue new token if needed
+        });
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
 });
 
 module.exports = {
@@ -149,5 +191,6 @@ module.exports = {
     loginUser,
     refreshAccessToken,
     logoutUser,
-    getMe
+    getMe,
+    updateUserProfile
 };

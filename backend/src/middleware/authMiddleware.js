@@ -10,6 +10,9 @@ const protect = async (req, res, next) => {
     ) {
         try {
             token = req.headers.authorization.split(' ')[1];
+            // Remove double quotes if present (common frontend mistake)
+            token = token.replace(/"/g, ''); 
+            
             const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
             req.user = await User.findById(decoded.id).select('-password');
             if(!req.user) {

@@ -19,6 +19,7 @@ const Profile = () => {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [orderError, setOrderError] = useState(null);
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
 
   // Sync activeTab with URL params
   useEffect(() => {
@@ -233,11 +234,42 @@ const Profile = () => {
                 {activeTab === "profile" && (
                      <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm animate-fade-in-up">
                         <h2 className="text-2xl font-bold mb-8 dark:text-white">Profile Details</h2>
-                         <form className="space-y-6">
+                         <form onSubmit={async (e) => {
+                                e.preventDefault();
+                                const formData = new FormData(e.target);
+                                const profileData = {
+                                    name: formData.get('name'),
+                                    mobile: formData.get('mobile')
+                                };
+
+                                try {
+                                    const token = localStorage.getItem("token");
+                                    const res = await fetch('/api/auth/profile', {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': `Bearer ${token}`
+                                        },
+                                        body: JSON.stringify(profileData)
+                                    });
+                                    
+                                    if (res.ok) {
+                                        const updatedUser = await res.json();
+                                        // Update Redux state
+                                         dispatch({ type: 'auth/login', payload: updatedUser }); 
+                                         alert("Profile updated successfully!");
+                                    } else {
+                                        alert("Failed to update profile.");
+                                    }
+                                } catch (error) {
+                                    console.error(error);
+                                    alert("Something went wrong.");
+                                }
+                            }}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">Full Name</label>
-                                    <input type="text" defaultValue={user.name} className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" />
+                                    <input name="name" type="text" defaultValue={user.name} className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" />
                                 </div>
                                 <div>
                                     <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">Role</label>
@@ -250,10 +282,10 @@ const Profile = () => {
                             </div>
                             <div>
                                 <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">Phone Number</label>
-                                <input type="tel" defaultValue={user.mobile || ''} placeholder="Add mobile number" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" />
+                                <input name="mobile" type="tel" defaultValue={user.mobile || ''} placeholder="Add mobile number" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" />
                             </div>
                             <div className="pt-4">
-                                <button className="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-black transition-colors shadow-lg active:scale-95">Save Changes</button>
+                                <button type="submit" className="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-black transition-colors shadow-lg active:scale-95">Save Changes</button>
                             </div>
                          </form>
                     </div>
@@ -261,23 +293,122 @@ const Profile = () => {
 
                  {activeTab === "address" && (
                     <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm animate-fade-in-up">
-                        <div className="flex justify-between items-center mb-8">
+                        <div className="flex justify-between items-center mb-6">
                              <h2 className="text-2xl font-bold dark:text-white">Saved Addresses</h2>
-                             <button className="text-primary font-bold text-sm bg-primary/10 px-4 py-2 rounded-full hover:bg-primary hover:text-white transition-all">+ Add New</button>
+                             {!isEditingAddress && (
+                                <button 
+                                    onClick={() => setIsEditingAddress(true)}
+                                    className="text-primary font-bold text-sm bg-primary/10 px-4 py-2 rounded-full hover:bg-primary hover:text-white transition-all"
+                                >
+                                    Update Address
+                                </button>
+                             )}
                         </div>
-                        <div className="border border-green-500 bg-green-50/50 dark:bg-green-900/10 p-6 rounded-xl relative hover:shadow-md transition-shadow">
-                            <span className="absolute top-4 right-4 flex h-3 w-3">
-                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                 <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                            </span>
-                            <div className="flex items-center gap-2 mb-2">
-                                <FaMapMarkerAlt className="text-green-600" />
-                                <span className="font-bold text-green-700 dark:text-green-400 text-sm uppercase tracking-wider">Default Address</span>
+                        
+                        {!isEditingAddress ? (
+                             <div className="border border-green-500 bg-green-50/50 dark:bg-green-900/10 p-6 rounded-xl relative hover:shadow-md transition-shadow">
+                                <span className="absolute top-4 right-4 flex h-3 w-3">
+                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                     <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                                </span>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <FaMapMarkerAlt className="text-green-600" />
+                                    <span className="font-bold text-green-700 dark:text-green-400 text-sm uppercase tracking-wider">Current Address</span>
+                                </div>
+                                <div className="mt-4 space-y-1">
+                                    <p className="font-bold text-xl dark:text-white mb-2">{user.name}</p>
+                                    {user.address && user.address.street ? (
+                                        <>
+                                            <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg">
+                                                {user.address.street}, {user.address.city}
+                                            </p>
+                                            <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg">
+                                                {user.address.state} - {user.address.zip}
+                                            </p>
+                                            <p className="text-gray-600 dark:text-gray-300 font-medium text-lg mt-1">
+                                                {user.address.country}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <p className="text-gray-400 italic">No address saved yet.</p>
+                                    )}
+                                    <p className="text-gray-600 dark:text-gray-300 mt-3 font-medium">Mob: {user.mobile || 'Not provided'}</p>
+                                    <p className="text-gray-600 dark:text-gray-300 font-medium">Email: {user.email}</p>
+                                </div>
                             </div>
-                            <p className="font-bold text-xl dark:text-white mb-1">Home</p>
-                            <p className="text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">123, Main Street, Tech Park Area,<br/> Bangalore, Karnataka - 560001</p>
-                            <p className="text-gray-600 dark:text-gray-300 mt-3 font-medium">Phone: +91 98765 43210</p>
-                        </div>
+                        ) : (
+                            <form onSubmit={async (e) => {
+                                e.preventDefault();
+                                const formData = new FormData(e.target);
+                                const addressData = {
+                                    street: formData.get('street'),
+                                    city: formData.get('city'),
+                                    state: formData.get('state'),
+                                    zip: formData.get('zip'),
+                                    country: formData.get('country')
+                                };
+
+                                try {
+                                    const token = localStorage.getItem("token");
+                                    const res = await fetch('/api/auth/profile', {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': `Bearer ${token}`
+                                        },
+                                        body: JSON.stringify({ address: addressData })
+                                    });
+                                    
+                                    if (res.ok) {
+                                        const updatedUser = await res.json();
+                                        // Update Redux state
+                                        dispatch({ type: 'auth/login', payload: updatedUser }); 
+                                        alert("Address updated successfully!");
+                                        setIsEditingAddress(false); // Switch back to view mode
+                                    } else {
+                                        alert("Failed to update address.");
+                                    }
+                                } catch (error) {
+                                    console.error(error);
+                                    alert("Something went wrong.");
+                                }
+                            }}>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <div>
+                                        <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">Street Address</label>
+                                        <input name="street" defaultValue={user.address?.street || ''} type="text" placeholder="123 Main St" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" required />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">City</label>
+                                        <input name="city" defaultValue={user.address?.city || ''} type="text" placeholder="City" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" required />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">State</label>
+                                        <input name="state" defaultValue={user.address?.state || ''} type="text" placeholder="State" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" required />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">Zip Code</label>
+                                        <input name="zip" defaultValue={user.address?.zip || ''} type="text" placeholder="Zip Code" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" required />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">Country</label>
+                                        <input name="country" defaultValue={user.address?.country || 'India'} type="text" placeholder="Country" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" required />
+                                    </div>
+                                </div>
+                                <div className="flex justify-end gap-3">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setIsEditingAddress(false)}
+                                        className="px-6 py-3 rounded-lg font-bold text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-black transition-colors shadow-lg">
+                                        Save Address
+                                    </button>
+                                </div>
+                            </form>
+                        )}
                     </div>
                  )}
 

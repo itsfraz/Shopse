@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 
-const useProductFiltering = (products, initialCategory = 'All') => {
+const useProductFiltering = (products, initialCategory = 'All', searchQuery = '') => {
   const [filterCategory, setFilterCategory] = useState(initialCategory);
   const [filterRating, setFilterRating] = useState(0);
   const [sortOption, setSortOption] = useState('popularity');
@@ -8,7 +8,17 @@ const useProductFiltering = (products, initialCategory = 'All') => {
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    // Category Filter
+    // Search Query Filter
+    if (searchQuery) {
+        const lowerQuery = searchQuery.toLowerCase().trim();
+        result = result.filter(product => 
+            product.title.toLowerCase().includes(lowerQuery) ||
+            product.category.toLowerCase().includes(lowerQuery) ||
+            (product.color && product.color.toLowerCase().includes(lowerQuery))
+        );
+    }
+
+    // Category Filter (only apply if not 'All' - keeps existing logic)
     if (filterCategory !== 'All') {
       result = result.filter((product) => product.category === filterCategory);
     }
@@ -29,7 +39,7 @@ const useProductFiltering = (products, initialCategory = 'All') => {
     }
 
     return result;
-  }, [products, filterCategory, filterRating, sortOption]);
+  }, [products, filterCategory, filterRating, sortOption, searchQuery]);
 
   return {
     filterCategory,

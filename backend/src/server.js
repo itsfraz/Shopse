@@ -10,6 +10,16 @@ const { errorHandler } = require('./middleware/errorMiddleware');
 // Load env vars
 dotenv.config();
 
+// Backward compatibility / Default for JWT Secrets
+if (!process.env.JWT_ACCESS_SECRET) {
+    console.warn("WARNING: JWT_ACCESS_SECRET not found in .env, using JWT_SECRET or default.");
+    process.env.JWT_ACCESS_SECRET = process.env.JWT_SECRET || 'fallback_access_secret_dev_only';
+}
+if (!process.env.JWT_REFRESH_SECRET) {
+    console.warn("WARNING: JWT_REFRESH_SECRET not found in .env, using default.");
+    process.env.JWT_REFRESH_SECRET = process.env.JWT_SECRET || 'fallback_refresh_secret_dev_only';
+}
+
 // Connect to database
 connectDB();
 

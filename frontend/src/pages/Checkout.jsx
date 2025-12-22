@@ -8,7 +8,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.cartItems);
-  const { isAuthenticated } = useSelector((state) => state.auth); // Auth check
+  const { isAuthenticated, user } = useSelector((state) => state.auth); // Auth check
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -21,12 +21,12 @@ const Checkout = () => {
   const grandTotal = (totalPrice * 1.18).toFixed(2);
 
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    address: "",
-    city: "",
-    zip: "",
+    firstName: user?.name?.split(' ')[0] || "",
+    lastName: user?.name?.split(' ').slice(1).join(' ') || "",
+    email: user?.email || "",
+    address: user?.address?.street || "",
+    city: user?.address?.city || "",
+    zip: user?.address?.zip || "",
     cardName: "",
     cardNumber: "",
     expiry: "",
@@ -63,7 +63,8 @@ const Checkout = () => {
     };
 
     try {
-        const token = localStorage.getItem('token');
+        let token = localStorage.getItem('token');
+        if (token) token = token.replace(/"/g, ''); // Sanitize
         
         if (!token) {
             console.error("Checkout Attempt Failed: No token found in localStorage.");

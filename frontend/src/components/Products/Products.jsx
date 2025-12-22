@@ -3,7 +3,7 @@ import ProductsData from "../../data/products";
 import useProductFiltering from "../../hooks/useProductFiltering";
 import ProductCard from "./ProductCard";
 
-const Products = ({ category, limit }) => {
+const Products = ({ category, limit, searchQuery }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = limit ? limit : 8; // Use limit if provided
@@ -17,7 +17,7 @@ const Products = ({ category, limit }) => {
       sortOption,
       setSortOption,
       filteredProducts
-  } = useProductFiltering(ProductsData, category);
+  } = useProductFiltering(ProductsData, category, searchQuery);
 
   useEffect(() => {
     // Sync external category prop if it changes

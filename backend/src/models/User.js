@@ -19,6 +19,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    address: {
+        street: { type: String },
+        city: { type: String },
+        state: { type: String },
+        zip: { type: String },
+        country: { type: String, default: 'India' }
+    },
     password: {
         type: String,
         required: [true, 'Please add a password'],

@@ -13,9 +13,8 @@ const orderSchema = mongoose.Schema({
             img: { type: String, required: true },
             price: { type: Number, required: true },
             product: {
-                type: mongoose.Schema.Types.ObjectId,
-                required: true,
-                ref: 'Product' // Assuming we might have a Product model later, or just store ID
+                type: Number, // Changed from ObjectId to match simplified frontend IDs
+                required: true
             }
         }
     ],

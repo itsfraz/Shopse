@@ -6,10 +6,11 @@ import { IoMdSearch } from "react-icons/io";
 import { FaCartShopping } from "react-icons/fa6";
 import { FaUser, FaChevronDown } from "react-icons/fa"; 
 import ProductsData from "../../data/products";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = ({ handleOrderPopup }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // Hook for navigation
   const cartItems = useSelector((state) => state.cart.cartItems);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const cartCount = cartItems.length;
@@ -20,15 +21,20 @@ const Navbar = ({ handleOrderPopup }) => {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      if (searchTerm.length > 0) {
+      if (searchTerm.trim().length > 0) {
+        const lowerTerm = searchTerm.toLowerCase().trim();
+        
         const filteredSuggestions = ProductsData.filter((product) =>
-          product.title.toLowerCase().includes(searchTerm.toLowerCase())
-        ).slice(0, 5);
+             product.title.toLowerCase().includes(lowerTerm) || 
+             product.category.toLowerCase().includes(lowerTerm) ||
+             (product.color && product.color.toLowerCase().includes(lowerTerm))
+        ).slice(0, 6); // Limiting to top 6 results
+        
         setSuggestions(filteredSuggestions);
       } else {
         setSuggestions([]);
       }
-    }, 300); // 300ms debounce
+    }, 200); // Faster 200ms debounce for "realtime" feel
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
@@ -38,7 +44,7 @@ const Navbar = ({ handleOrderPopup }) => {
   };
 
   const handleSuggestionClick = (suggestion) => {
-    setSearchTerm(suggestion.title);
+    setSearchTerm(""); // Clear search bar after selection or keep title? Usually clear or set to title.
     setSuggestions([]);
   };
 
@@ -79,32 +85,54 @@ const Navbar = ({ handleOrderPopup }) => {
         {/* Right: Search & Actions */}
         <div className="flex items-center gap-6">
             {/* Search Bar */}
-            <div className="relative hidden md:block">
+            <div className="relative hidden md:block group">
                 <input 
                     type="text" 
-                    placeholder="Search Products"
+                    placeholder="Search for products, brands and more"
                     value={searchTerm}
                     onChange={handleSearchChange}
-                    className="bg-gray-100 text-sm px-4 py-2 pl-10 rounded-full w-[250px] focus:outline-none focus:ring-1 focus:ring-black"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && searchTerm.trim().length > 0) {
+                            setSuggestions([]); // Close suggestions
+                            navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
+                        }
+                    }}
+                    className="bg-gray-100/50 border border-gray-200 text-sm px-4 py-2.5 pl-10 rounded-full w-[300px] lg:w-[400px] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     aria-label="Search Products"
                 />
-                <IoMdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-lg" />
+                <IoMdSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
                 
                 {suggestions.length > 0 && (
-                    <ul className="absolute left-0 top-12 w-full bg-white text-black border border-gray-100 rounded-md shadow-lg z-50">
-                    {suggestions.map((product) => (
-                        <Link 
-                            to={`/product/${product.id}`} 
-                            key={product.id}
-                            className="block px-4 py-2 cursor-pointer hover:bg-gray-50 text-sm"
+                    <div className="absolute left-0 top-full mt-2 w-full bg-white text-black border border-gray-100 rounded-xl shadow-2xl z-50 overflow-hidden">
+                        {suggestions.map((product) => (
+                            <Link 
+                                to={`/product/${product.id}`} 
+                                key={product.id}
+                                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+                                onClick={() => handleSuggestionClick(product)}
+                            >
+                                <div className="w-10 h-10 bg-gray-100 rounded-md p-1 flex-shrink-0">
+                                    <img src={product.img} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 truncate">{product.title}</p>
+                                    <p className="text-xs text-gray-500 truncate">{product.category}</p>
+                                </div>
+                                <div className="text-xs font-bold text-primary">
+                                    ₹{product.price}
+                                </div>
+                            </Link>
+                        ))}
+                        <div 
+                            className="bg-gray-50 px-4 py-2 text-xs text-center text-gray-500 hover:text-primary cursor-pointer border-t border-gray-100"
                             onClick={() => {
-                                handleSuggestionClick(product);
+                                setSuggestions([]);
+                                navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
                             }}
                         >
-                            {product.title}
-                        </Link>
-                    ))}
-                    </ul>
+                            See all results for "{searchTerm}"
+                        </div>
+                    </div>
                 )}
             </div>
 
