@@ -1,0 +1,47 @@
+[33mcommit b22a4e46dc3fc23bd4da1761e497bf436585d795[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: Faraz4807 <farajm624@mail.com>
+Date:   Tue Dec 23 12:09:56 2025 +0530
+
+    feat: Initialize frontend application with admin and user pages, integrate core backend services, and update project configuration.
+
+[33mcommit 4c170c4b7d98bda78ccdef71416069d4e437212a[m
+Author: Faraz4807 <farajm624@mail.com>
+Date:   Mon Dec 22 19:59:31 2025 +0530
+
+    feat: add project preview image
+
+[33mcommit 5af468b7f2f1612da9b7f756eae65df0f33d4c6d[m
+Author: Faraz4807 <farajm624@mail.com>
+Date:   Mon Dec 22 19:56:21 2025 +0530
+
+    docs: Replace README placeholder image with project preview.
+
+[33mcommit 5a1d95383eeed810064172868d43f7a6cf51f656[m
+Author: Faraz4807 <farajm624@mail.com>
+Date:   Mon Dec 22 19:52:51 2025 +0530
+
+    feat: Implement core e-commerce application with frontend pages, backend APIs, and admin management.
+
+[33mcommit abd1c9ae2af3a6431720944adeaf2ce1c8e88597[m
+Author: Faraz4807 <farajm624@mail.com>
+Date:   Mon Dec 22 10:35:15 2025 +0530
+
+    feat: Implement core e-commerce functionality including user authentication, profiles, orders, product filtering, and checkout.
+
+[33mcommit 151afb4be2d94a0bd9c17a82e4e4a6ff880eb6f6[m
+Author: Faraz4807 <farajm624@mail.com>
+Date:   Sun Dec 21 15:35:25 2025 +0530
+
+    Some fixed
+
+[33mcommit 28fffe69fc131add2c22dec1982633a72276b05e[m
+Author: Faraz4807 <farajm624@mail.com>
+Date:   Sat Dec 20 15:03:25 2025 +0530
+
+    feat: Add complete e-commerce application including UI, state management, and product data.
+
+[33mcommit 4bc10336262b7035265acb22b6cd8d86744e053a[m
+Author: Faraz4807 <farajm624@mail.com>
+Date:   Wed Dec 18 19:38:53 2024 +0530
+
+    first commit

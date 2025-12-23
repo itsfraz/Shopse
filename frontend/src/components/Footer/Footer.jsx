@@ -1,5 +1,6 @@
 
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   FaFacebook,
   FaInstagram,
@@ -56,13 +57,13 @@ const Footer = () => {
           <div>
             <h3 className="font-bold mb-4">Help</h3>
             <ul className="space-y-2 text-sm text-gray-600">
-                <li className="hover:text-primary cursor-pointer">Track Your Order</li>
-                <li className="hover:text-primary cursor-pointer">Warranty & Support</li>
-                <li className="hover:text-primary cursor-pointer">Return Policy</li>
-                <li className="hover:text-primary cursor-pointer">Service Centers</li>
-                <li className="hover:text-primary cursor-pointer">Bulk Orders</li>
-                <li className="hover:text-primary cursor-pointer">FAQs</li>
-                <li className="hover:text-primary cursor-pointer">Why Buy Direct</li>
+                <li><Link to="/track-order" className="hover:text-primary cursor-pointer">Track Your Order</Link></li>
+                <li><Link to="/warranty-support" className="hover:text-primary cursor-pointer">Warranty & Support</Link></li>
+                <li><Link to="/return-policy" className="hover:text-primary cursor-pointer">Return Policy</Link></li>
+                <li><Link to="/service-centers" className="hover:text-primary cursor-pointer">Service Centers</Link></li>
+                <li><Link to="/bulk-orders" className="hover:text-primary cursor-pointer">Bulk Orders</Link></li>
+                <li><Link to="/faqs" className="hover:text-primary cursor-pointer">FAQs</Link></li>
+                <li><Link to="/why-buy-direct" className="hover:text-primary cursor-pointer">Why Buy Direct</Link></li>
             </ul>
           </div>
 
@@ -70,13 +71,13 @@ const Footer = () => {
           <div>
             <h3 className="font-bold mb-4">Company</h3>
             <ul className="space-y-2 text-sm text-gray-600">
-                <li className="hover:text-primary cursor-pointer">About boAt</li>
-                <li className="hover:text-primary cursor-pointer">News</li>
-                <li className="hover:text-primary cursor-pointer">Read Our Blog</li>
-                <li className="hover:text-primary cursor-pointer">Careers</li>
-                <li className="hover:text-primary cursor-pointer">Security</li>
-                <li className="hover:text-primary cursor-pointer">Terms of Service</li>
-                <li className="hover:text-primary cursor-pointer">Privacy Policy</li>
+                <li><Link to="/about" className="hover:text-primary cursor-pointer">About boAt</Link></li>
+                <li><Link to="/news" className="hover:text-primary cursor-pointer">News</Link></li>
+                <li><Link to="/blog" className="hover:text-primary cursor-pointer">Read Our Blog</Link></li>
+                <li><Link to="/careers" className="hover:text-primary cursor-pointer">Careers</Link></li>
+                <li><Link to="/security" className="hover:text-primary cursor-pointer">Security</Link></li>
+                <li><Link to="/terms" className="hover:text-primary cursor-pointer">Terms of Service</Link></li>
+                <li><Link to="/privacy" className="hover:text-primary cursor-pointer">Privacy Policy</Link></li>
             </ul>
           </div>
         </div>

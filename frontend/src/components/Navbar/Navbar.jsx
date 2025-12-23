@@ -70,10 +70,7 @@ const Navbar = ({ handleOrderPopup }) => {
 
   return (
     <div className="bg-white dark:bg-gray-900 sticky top-0 z-50 shadow-sm font-outfit transition-colors duration-200">
-      {/* Announcement Bar */}
-      <div className="bg-gray-100 dark:bg-gray-800 text-center text-xs font-medium py-2 dark:text-gray-300">
-        Get 5% off on your first order. Use Code: <span className="font-bold">BOATHEAD</span>
-      </div>
+
 
       {/* Main Navbar */}
       <div className="container py-4 flex items-center justify-between gap-4">

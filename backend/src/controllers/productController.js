@@ -53,12 +53,21 @@ const createProduct = asyncHandler(async (req, res) => {
         category: req.body.category,
         stock: req.body.stock,
         description: req.body.description,
+        highlights: req.body.highlights,
+        specifications: req.body.specifications,
         discountPrice: req.body.discountPrice,
         isFeatured: req.body.isFeatured || false,
         isActive: req.body.isActive !== undefined ? req.body.isActive : true
     });
 
     const createdProduct = await product.save();
+    
+    // Real-time update (if socket is available)
+    try {
+        const io = req.app.get('io');
+        if(io) io.emit('productCreated', createdProduct);
+    } catch(e) { console.error("Socket emit failed", e) }
+
     res.status(201).json(createdProduct);
 });
 
@@ -77,8 +86,22 @@ const updateProduct = asyncHandler(async (req, res) => {
         product.stock = req.body.stock !== undefined ? req.body.stock : product.stock;
         product.discountPrice = req.body.discountPrice !== undefined ? req.body.discountPrice : product.discountPrice;
         product.isActive = req.body.isActive !== undefined ? req.body.isActive : product.isActive;
+        
+        // Update new fields
+        product.highlights = req.body.highlights || product.highlights;
+        product.specifications = req.body.specifications || product.specifications;
 
         const updatedProduct = await product.save();
+
+        try {
+            const io = req.app.get('io');
+            if(io) io.emit('stockUpdated', { 
+                productId: updatedProduct._id, 
+                newStock: updatedProduct.stock,
+                name: updatedProduct.name 
+            });
+        } catch(e) { console.error("Socket emit failed", e) }
+
         res.json(updatedProduct);
     } else {
         res.status(404);
@@ -93,8 +116,110 @@ const deleteProduct = asyncHandler(async (req, res) => {
     const product = await Product.findById(req.params.id);
 
     if (product) {
-        await product.deleteOne(); // or product.remove() depending on Mongoose version
+        await product.deleteOne(); 
         res.json({ message: 'Product removed' });
+    } else {
+        res.status(404);
+        throw new Error('Product not found');
+    }
+});
+
+// @desc    Create new review
+// @route   POST /api/products/:id/reviews
+// @access  Private
+const createProductReview = asyncHandler(async (req, res) => {
+    const { rating, comment } = req.body;
+    const product = await Product.findById(req.params.id);
+
+    if (product) {
+        const alreadyReviewed = product.reviews.find(
+            (r) => r.user.toString() === req.user._id.toString()
+        );
+
+        if (alreadyReviewed) {
+            res.status(400);
+            throw new Error('Product already reviewed');
+        }
+
+        const review = {
+            name: req.user.name,
+            rating: Number(rating),
+            comment,
+            user: req.user._id,
+        };
+
+        product.reviews.push(review);
+        // Do not update avg rating until approved
+        
+        await product.save();
+        res.status(201).json({ message: 'Review added successfully (pending approval)' });
+    } else {
+        res.status(404);
+        throw new Error('Product not found');
+    }
+});
+
+// @desc    Approve a review
+// @route   PUT /api/products/:id/reviews/:reviewId/approve
+// @access  Private/Admin
+const approveProductReview = asyncHandler(async (req, res) => {
+    const product = await Product.findById(req.params.id);
+
+    if (product) {
+        const review = product.reviews.id(req.params.reviewId);
+        
+        if (!review) {
+            res.status(404);
+            throw new Error('Review not found');
+        }
+
+        review.isApproved = true;
+
+        // Recalculate Rating
+        const approvedReviews = product.reviews.filter(r => r.isApproved);
+        product.numReviews = approvedReviews.length;
+        product.rating =
+            approvedReviews.reduce((acc, item) => item.rating + acc, 0) /
+            approvedReviews.length;
+
+        await product.save();
+        res.json({ message: 'Review approved' });
+    } else {
+        res.status(404);
+        throw new Error('Product not found');
+    }
+});
+
+// @desc    Delete a review
+// @route   DELETE /api/products/:id/reviews/:reviewId
+// @access  Private/Admin
+const deleteProductReview = asyncHandler(async (req, res) => {
+    const product = await Product.findById(req.params.id);
+
+    if (product) {
+        const review = product.reviews.id(req.params.reviewId);
+        if(!review) {
+            res.status(404);
+            throw new Error("Review not found");
+        }
+        
+        // Use pull to remove safely
+        product.reviews.pull(req.params.reviewId);
+
+        // Recalculate Rating
+        const approvedReviews = product.reviews.filter(r => r.isApproved);
+        product.numReviews = approvedReviews.length;
+        
+        if (approvedReviews.length > 0) {
+            product.rating =
+                approvedReviews.reduce((acc, item) => item.rating + acc, 0) /
+                approvedReviews.length;
+        } else {
+            product.rating = 0;
+        }
+
+        await product.save();
+        res.json({ message: 'Review removed' });
     } else {
         res.status(404);
         throw new Error('Product not found');
@@ -106,5 +231,8 @@ module.exports = {
     getProductById,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    createProductReview,
+    approveProductReview,
+    deleteProductReview
 };

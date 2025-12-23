@@ -49,6 +49,7 @@ app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
+app.use('/api/pages', require('./routes/pageRoutes'));
 
 app.get('/', (req, res) => {
     res.send('API is running...');

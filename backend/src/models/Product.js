@@ -42,6 +42,31 @@ const productSchema = new mongoose.Schema({
     isFeatured: {
         type: Boolean,
         default: false
+    },
+    highlights: [{
+        type: String
+    }],
+    specifications: [{
+        key: { type: String },
+        value: { type: String }
+    }],
+    reviews: [{
+        user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
+        name: { type: String, required: true },
+        rating: { type: Number, required: true, min: 1, max: 5 },
+        comment: { type: String, required: true },
+        isApproved: { type: Boolean, default: false },
+        createdAt: { type: Date, default: Date.now }
+    }],
+    rating: {
+        type: Number,
+        required: true,
+        default: 0
+    },
+    numReviews: {
+        type: Number,
+        required: true,
+        default: 0
     }
 }, {
     timestamps: true

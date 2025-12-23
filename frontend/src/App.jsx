@@ -34,6 +34,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
+const DynamicPage = lazy(() => import("./pages/DynamicPage"));
 
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 
@@ -191,6 +192,7 @@ const App = () => {
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
+                  <Route path="/:slug" element={<DynamicPage />} />
               </Route>
             </Routes>
           </Suspense>

@@ -1,21 +1,16 @@
-<div align="center">
-
 # 🛒 MERN Shopping App
-### A High-Performance, Full-Stack E-Commerce Solution
 
-<img src="https://readme-typing-svg.demolab.com/?lines=Modern+MERN+E-Commerce+App;Fast,+Secure,+Scalable;Built+with+React,+Node,+MongoDB;Real-Time+Admin+Dashboard&font=Fira%20Code&center=true&width=500&height=50&color=3b82f6&vCenter=true&pause=1000" alt="Typing SVG" />
+## A High-Performance, Full-Stack E-Commerce Solution
 
-<p align="center">
-  <img src="https://img.shields.io/badge/MERN-Stack-000000?style=for-the-badge&logo=mongodb&logoColor=green" alt="MERN Stack" />
-  <img src="https://img.shields.io/badge/React-v18-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
-  <img src="https://img.shields.io/badge/Node.js-v20-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
-  <img src="https://img.shields.io/badge/Express-Framework-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
-  <img src="https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-Modern_UI-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
-  <img src="https://img.shields.io/badge/JWT-Secure_Auth-000000?style=for-the-badge&logo=json-web-tokens&logoColor=white" alt="JWT Auth" />
-</p>
+![Typing SVG](https://readme-typing-svg.demolab.com/?lines=Modern+MERN+E-Commerce+App;Fast,+Secure,+Scalable;Built+with+React,+Node,+MongoDB;Real-Time+Admin+Dashboard&font=Fira%20Code&center=true&width=500&height=50&color=3b82f6&vCenter=true&pause=1000)
 
-</div>
+![MERN Stack](https://img.shields.io/badge/MERN-Stack-000000?style=for-the-badge&logo=mongodb&logoColor=green)
+![React](https://img.shields.io/badge/React-v18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Node.js](https://img.shields.io/badge/Node.js-v20-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-Framework-000000?style=for-the-badge&logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-Modern_UI-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Secure_Auth-000000?style=for-the-badge&logo=json-web-tokens&logoColor=white)
 
 ---
 
@@ -25,27 +20,27 @@
 >
 > *Add your application screenshots here. Showcase the Landing Page, Product Details, Cart, and Admin Dashboard.*
 
-<div align="center">
-  <img src="./project_preview.png" alt="App Preview" width="100%" />
-</div>
+![App Preview](./project_preview.png)
 
 ---
 
 ## 🚀 Key Features
 
 ### 🛍️ User Experience
-*   **Browse & Search:** Advanced product filtering, searching, and categorization.
-*   **Seamless Cart:** Add to cart, update quantities, and calculate totals dynamically.
-*   **Secure Checkout:** Integrated payment simulation and order validation.
-*   **User Profiles:** Manage address book, view order history, and track status.
-*   **Responsive Design:** Fully optimized for Mobile, Tablet, and Desktop.
+
+* **Browse & Search:** Advanced product filtering, searching, and categorization.
+* **Seamless Cart:** Add to cart, update quantities, and calculate totals dynamically.
+* **Secure Checkout:** Integrated payment simulation and order validation.
+* **User Profiles:** Manage address book, view order history, and track status.
+* **Responsive Design:** Fully optimized for Mobile, Tablet, and Desktop.
 
 ### 🛡️ Admin Power
-*   **Dashboard Analytics:** Visual overview of sales, users, and orders.
-*   **Product Management:** Create, edit, delete, and manage inventory stock.
-*   **Order Fulfillment:** Track order status (Pending → Shipped → Delivered).
-*   **Real-Time Sync:** **Socket.IO** integration for instant stock updates across clients.
-*   **Global Settings:** Update site name, currency, and SEO meta tags instantly.
+
+* **Dashboard Analytics:** Visual overview of sales, users, and orders.
+* **Product Management:** Create, edit, delete, and manage inventory stock.
+* **Order Fulfillment:** Track order status (Pending → Shipped → Delivered).
+* **Real-Time Sync:** **Socket.IO** integration for instant stock updates across clients.
+* **Global Settings:** Update site name, currency, and SEO meta tags instantly.
 
 ---
 
@@ -140,46 +135,49 @@ npm run dev        # Start React Dev Server
 
 The application includes a comprehensive Admin Dashboard.
 
-1.  **Run the Admin Seed Script:**
-    
-    ```bash
-    cd backend
-    node createAdmin.js
-    ```
+1. **Run the Admin Seed Script:**
 
-    This will create a user `admin@example.com` with password `123456`.
+   ```bash
+   cd backend
+   node createAdmin.js
+   ```
 
-2.  **Or Manually update the user role** in MongoDB to `admin`.
-    *   Find the user document.
-    *   Set `"role": "admin"`.
-3.  **Log in** and access the dashboard via the Profile menu.
+   This will create a user `admin@example.com` with password `123456`.
+
+2. **Or Manually update the user role** in MongoDB to `admin`.
+
+   * Find the user document.
+   * Set `"role": "admin"`.
+
+3. **Log in** and access the dashboard via the Profile menu.
 
 **Key Admin Features:**
-*   Manage **Items & Stock** instantly.
-*   View **Live Orders** coming in.
-*   Update **Global Website Settings** (Logos, Title, Tax).
-*   Analyze **Sales Performance**.
+
+* Manage **Items & Stock** instantly.
+* View **Live Orders** coming in.
+* Update **Global Website Settings** (Logos, Title, Tax).
+* Analyze **Sales Performance**.
 
 ---
 
 ## 🌍 Deployment
 
-*   **Frontend:** Deployed on **Netlify** / **Vercel**.
-    *   Build command: `npm run build`
-    *   Output directory: `dist`
-*   **Backend:** Deployed on **Render** / **Railway**.
-    *   Connect your repo and set build command to `npm install`.
-    *   Start command: `node src/server.js`
+* **Frontend:** Deployed on **Netlify** / **Vercel**.
+  * Build command: `npm run build`
+  * Output directory: `dist`
+* **Backend:** Deployed on **Render** / **Railway**.
+  * Connect your repo and set build command to `npm install`.
+  * Start command: `node src/server.js`
 
 ---
 
 ## 📈 Future Enhancements
 
-*   [ ] **Payment Gateway Integration** (Stripe/Razorpay) - *UI Implemented, Mock Functionality*
-*   [x] **Wishlist Functionality** for saving favorites
-*   [ ] **Product Reviews & Ratings** system (Mock Data)
-*   [ ] **Email Notifications** for order updates
-*   [ ] **PWA Support** for mobile-app-like experience
+* [ ] **Payment Gateway Integration** (Stripe/Razorpay) - *UI Implemented, Mock Functionality*
+* [x] **Wishlist Functionality** for saving favorites
+* [ ] **Product Reviews & Ratings** system (Mock Data)
+* [ ] **Email Notifications** for order updates
+* [ ] **PWA Support** for mobile-app-like experience
 
 ---
 
@@ -187,11 +185,11 @@ The application includes a comprehensive Admin Dashboard.
 
 Contributions are welcome!
 
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ---
 
@@ -201,12 +199,8 @@ This project is licensed under the **MIT License**.
 
 ---
 
-<div align="center">
-
 ### 👨‍💻 Developed by [Your Name]
 
 [![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yourusername)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/yourusername)
 [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge&logo=todoist&logoColor=white)](https://yourportfolio.com)
-
-</div>
