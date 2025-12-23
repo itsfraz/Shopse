@@ -22,24 +22,60 @@ const addOrderItems = asyncHandler(async (req, res) => {
         throw new Error('No order items');
     }
 
-    // 1. Verify Stock Availability
-    for (const item of orderItems) {
-        // Handle both ObjectId and String ID formats from frontend orderItems
-        const productId = item.product;
-        const product = await Product.findById(productId);
-        
-        if (!product) {
-            res.status(404);
-            throw new Error(`Product not found: ${item.name}`);
-        }
-        
-        if (product.stock < item.qty) {
-            res.status(400);
-            throw new Error(`Insufficient stock for ${product.name}. Available: ${product.stock}`);
-        }
+    // 0. Prevent Duplicate Orders (Simple Idempotency Check)
+    // Check if user placed an order with same total price in last 5 seconds
+    const duplicateCheck = await Order.findOne({
+        user: req.user._id,
+        totalPrice: totalPrice,
+        createdAt: { $gt: new Date(Date.now() - 5000) }
+    });
+
+    if (duplicateCheck) {
+        res.status(400);
+        throw new Error('Duplicate order detected. Please check your order history.');
     }
 
-    // 2. Create Order
+    // 1. Reserve Stock Atomically (Optimistic Locking pattern without Transactions)
+    const reservedItems = [];
+
+    try {
+        for (const item of orderItems) {
+            // Handle both ObjectId and String ID formats
+            const productId = item.product;
+
+            // Attempt to decrement stock ONLY if sufficient stock exists
+            const updatedProduct = await Product.findOneAndUpdate(
+                { _id: productId, stock: { $gte: item.qty } },
+                { $inc: { stock: -item.qty } },
+                { new: true } 
+            );
+            
+            if (!updatedProduct) {
+                // If null, it means condition { stock: { $gte: qty } } failed (or product missing)
+                // Fetch product to see if it exists to give better error
+                const exists = await Product.findById(productId);
+                if (!exists) {
+                    throw new Error(`Product not found: ${item.name}`);
+                } else {
+                    throw new Error(`Insufficient stock for ${exists.name}. Available: ${exists.stock}`);
+                }
+            }
+
+            // Success, track it for potential rollback
+            reservedItems.push({ id: productId, qty: item.qty });
+        }
+    } catch (error) {
+        // 2. Rollback: If any item failed, re-add stock for successful ones
+        console.error("Order Failed, Rolling back stock...", error.message);
+        for (const reserved of reservedItems) {
+            await Product.findByIdAndUpdate(reserved.id, { $inc: { stock: reserved.qty } });
+        }
+        res.status(400);
+        throw error; // Re-throw to be caught by error handler
+    }
+
+    // 3. Create Order
+    // If we reached here, all stock is secured.
     const order = new Order({
         orderItems,
         user: req.user._id,
@@ -49,30 +85,28 @@ const addOrderItems = asyncHandler(async (req, res) => {
         taxPrice,
         shippingPrice,
         totalPrice,
-        isPaid: true, // Assuming mock payment success for now
+        isPaid: true, // Assuming mock payment success
         paidAt: Date.now()
     });
 
     const createdOrder = await order.save();
 
-    // 3. Deduct Stock Atomically & Emit Event
+    // 4. Emit event for real-time frontend updates
     const io = req.app.get('io');
-    
-    for (const item of orderItems) {
-        const productId = item.product;
-        const updatedProduct = await Product.findByIdAndUpdate(
-            productId,
-            { $inc: { stock: -item.qty } },
-            { new: true } // Return updated doc
-        );
-        
-        // Emit stock update event to everyone (or just admins room if setup)
-        if (io) {
-            io.emit('stockUpdated', {
-                productId: updatedProduct._id,
-                name: updatedProduct.name,
-                newStock: updatedProduct.stock
-            });
+    if (io) {
+        // Emit for each product updated
+        for (const item of orderItems) {
+             // We can fetch new stock or calculate it. 
+             // Ideally we should have the new stock from the findOneAndUpdate above, 
+             // but we didn't store the full objects. Let's just notify 'update'.
+             const p = await Product.findById(item.product); // optional fetch for exact UI
+             if(p) {
+                io.emit('stockUpdated', {
+                    productId: p._id,
+                    name: p.name,
+                    newStock: p.stock
+                });
+             }
         }
     }
 
@@ -86,6 +120,11 @@ const getOrderById = asyncHandler(async (req, res) => {
     const order = await Order.findById(req.params.id).populate('user', 'name email');
 
     if (order) {
+        // Security Check: Only allow Admin or Order Owner
+        if (req.user.role !== 'admin' && order.user._id.toString() !== req.user._id.toString()) {
+            res.status(401);
+            throw new Error('Not authorized to view this order');
+        }
         res.json(order);
     } else {
         res.status(404);

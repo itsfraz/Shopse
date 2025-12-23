@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import api from '../services/api'; 
+import { exportToCSV } from '../../utils/downloadHelpers'; 
 import { 
     Download, 
     Calendar,
@@ -89,6 +90,20 @@ const Analytics = () => {
 
     const avgOrderValue = stats.ordersCount > 0 ? (stats.totalRevenue / stats.ordersCount).toFixed(2) : '0.00';
 
+    const handleExport = () => {
+        // Prepare data for CSV
+        const exportData = [
+            { Metric: "Total Revenue", Value: stats.totalRevenue },
+            { Metric: "Total Orders", Value: stats.ordersCount },
+            { Metric: "Total Users", Value: stats.usersCount },
+            { Metric: "Total Products", Value: stats.productsCount },
+            { Metric: "Avg Order Value", Value: avgOrderValue },
+            { Metric: "Date Generated", Value: new Date().toLocaleDateString() }
+        ];
+
+        exportToCSV(exportData, `analytics_report_${new Date().toISOString().split('T')[0]}.csv`);
+    };
+
     return (
         <div className="space-y-8">
             {/* Header */}
@@ -104,7 +119,10 @@ const Analytics = () => {
                         <Calendar size={18} />
                         Last 30 Days
                      </button>
-                     <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30">
+                     <button 
+                        onClick={handleExport}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30"
+                     >
                         <Download size={18} />
                         Export Report
                      </button>

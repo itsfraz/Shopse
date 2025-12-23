@@ -3,10 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "../redux/slices/authSlice";
 
+import { useToast } from '../context/ToastContext';
+
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector((state) => state.auth); // Get auth state
+  const { addToast } = useToast();
 
   // Redirect if already authenticated
   React.useEffect(() => {
@@ -49,6 +52,7 @@ const Login = () => {
             if (!data.accessToken) {
                 console.error("Login successful but no accessToken received!", data);
                 setError("Login failed: No access token received from server.");
+                addToast("Login failed: No access token received from server.", 'error');
                 setLoading(false);
                 return;
             }
@@ -68,6 +72,8 @@ const Login = () => {
                 mobile: data.mobile
             }));
             
+            addToast(`Welcome back, ${data.name}!`, 'success');
+
             if (data.role === 'admin') {
                 navigate("/admin/dashboard");
             } else {
@@ -75,10 +81,12 @@ const Login = () => {
             } 
         } else {
             setError(data.message || "Login failed");
+            addToast(data.message || "Login failed", 'error');
         }
     } catch (err) {
         console.error(err);
         setError("Something went wrong. Please try again.");
+        addToast("Something went wrong. Please try again.", 'error');
     } finally {
         setLoading(false);
     }

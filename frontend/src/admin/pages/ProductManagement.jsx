@@ -261,7 +261,7 @@ const ProductManagement = () => {
         // Socket.IO Real-time Stock Sync
         import('socket.io-client').then(({ io }) => {
             // In production, this URL might need to be env variable or inferred from window.location
-            const SOCKET_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '/';
+            const SOCKET_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '/');
             const socket = io(SOCKET_URL);
 
             socket.on('connect', () => {

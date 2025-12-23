@@ -140,8 +140,16 @@ npm run dev        # Start React Dev Server
 
 The application includes a comprehensive Admin Dashboard.
 
-1.  **Register a new user.**
-2.  **Manually update the user role** in MongoDB to `admin`.
+1.  **Run the Admin Seed Script:**
+    
+    ```bash
+    cd backend
+    node createAdmin.js
+    ```
+
+    This will create a user `admin@example.com` with password `123456`.
+
+2.  **Or Manually update the user role** in MongoDB to `admin`.
     *   Find the user document.
     *   Set `"role": "admin"`.
 3.  **Log in** and access the dashboard via the Profile menu.
@@ -167,9 +175,9 @@ The application includes a comprehensive Admin Dashboard.
 
 ## 📈 Future Enhancements
 
-*   [ ] **Payment Gateway Integration** (Stripe/Razorpay)
-*   [ ] **Wishlist Functionality** for saving favorites
-*   [ ] **Product Reviews & Ratings** system
+*   [ ] **Payment Gateway Integration** (Stripe/Razorpay) - *UI Implemented, Mock Functionality*
+*   [x] **Wishlist Functionality** for saving favorites
+*   [ ] **Product Reviews & Ratings** system (Mock Data)
 *   [ ] **Email Notifications** for order updates
 *   [ ] **PWA Support** for mobile-app-like experience
 

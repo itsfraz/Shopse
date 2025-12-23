@@ -4,15 +4,19 @@ import { useSelector, useDispatch } from "react-redux";
 import { clearCart } from "../redux/slices/cartSlice";
 import { logout } from "../redux/slices/authSlice";
 
+import { useToast } from '../context/ToastContext';
+
 const Checkout = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.cartItems);
   const { isAuthenticated, user } = useSelector((state) => state.auth); // Auth check
+  const { addToast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
-        alert("Please login to access checkout.");
+        addToast("Please login to access checkout.", 'warning');
         navigate("/login");
     }
   }, [isAuthenticated, navigate]);
@@ -39,6 +43,7 @@ const Checkout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
     // Prepare Order Payload
     const orderData = {
@@ -68,7 +73,7 @@ const Checkout = () => {
         
         if (!token) {
             console.error("Checkout Attempt Failed: No token found in localStorage.");
-            alert("Your session has expired or you are not logged in. Please login again.");
+            addToast("Session expired. Please login again.", 'error');
             dispatch(logout());
             navigate("/login");
             return;
@@ -88,21 +93,24 @@ const Checkout = () => {
         if (res.ok) {
             const data = await res.json();
             dispatch(clearCart());
+            addToast("Order placed successfully!", 'success');
             navigate('/order-success', { state: { orderId: data._id } });
         } else {
             const errData = await res.json();
             if (res.status === 401) {
-                alert("Session expired. Please login again.");
+                addToast("Session expired. Please login again.", 'error');
                 localStorage.removeItem("token");
                 dispatch(logout()); // Ensure you import logout
                 navigate("/login");
             } else {
-                alert("Order failed: " + (errData.message || "Unknown error"));
+                addToast(errData.message || "Order failed", 'error');
             }
         }
     } catch (error) {
         console.error("Order error", error);
-        alert("Something went wrong processing your order.");
+        addToast("Something went wrong processing your order.", 'error');
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -132,7 +140,8 @@ const Checkout = () => {
                   name="firstName" 
                   placeholder="First Name" 
                   required
-                  className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary"
+                  disabled={isSubmitting}
+                  className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary disabled:opacity-50"
                   onChange={handleChange}
                 />
                 <input 
@@ -140,7 +149,8 @@ const Checkout = () => {
                   name="lastName" 
                   placeholder="Last Name" 
                   required
-                  className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary"
+                  disabled={isSubmitting}
+                  className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary disabled:opacity-50"
                   onChange={handleChange}
                 />
               </div>
@@ -149,7 +159,8 @@ const Checkout = () => {
                 name="email" 
                 placeholder="Email Address" 
                 required
-                className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary"
+                disabled={isSubmitting}
+                className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary disabled:opacity-50"
                 onChange={handleChange}
               />
               <input 
@@ -157,7 +168,8 @@ const Checkout = () => {
                 name="address" 
                 placeholder="Street Address" 
                 required
-                className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary"
+                disabled={isSubmitting}
+                className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary disabled:opacity-50"
                 onChange={handleChange}
               />
               <div className="grid grid-cols-2 gap-4">
@@ -166,7 +178,8 @@ const Checkout = () => {
                   name="city" 
                   placeholder="City" 
                   required
-                  className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary"
+                  disabled={isSubmitting}
+                  className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary disabled:opacity-50"
                   onChange={handleChange}
                 />
                 <input 
@@ -174,7 +187,8 @@ const Checkout = () => {
                   name="zip" 
                   placeholder="Zip Code" 
                   required
-                  className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary"
+                  disabled={isSubmitting}
+                  className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary disabled:opacity-50"
                   onChange={handleChange}
                 />
               </div>
@@ -183,15 +197,17 @@ const Checkout = () => {
                <input 
                   type="text" 
                   name="cardName" 
-                  placeholder="Name on Card" 
-                  className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary"
+                  placeholder="Name on Card"
+                  disabled={isSubmitting} 
+                  className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary disabled:opacity-50"
                 />
                 <div className="relative">
                   <input 
                     type="text" 
                     name="cardNumber" 
-                    placeholder="Card Number" 
-                    className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary"
+                    placeholder="Card Number"
+                    disabled={isSubmitting} 
+                    className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary disabled:opacity-50"
                   />
                   <div className="absolute right-3 top-3 text-gray-400">VISA</div>
                 </div>
@@ -199,14 +215,16 @@ const Checkout = () => {
                   <input 
                     type="text" 
                     name="expiry" 
-                    placeholder="MM/YY" 
-                    className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary"
+                    placeholder="MM/YY"
+                    disabled={isSubmitting} 
+                    className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary disabled:opacity-50"
                   />
                   <input 
                     type="text" 
                     name="cvv" 
-                    placeholder="CVV" 
-                    className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary"
+                    placeholder="CVV"
+                    disabled={isSubmitting} 
+                    className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary disabled:opacity-50"
                   />
                 </div>
             </form>
@@ -251,9 +269,10 @@ const Checkout = () => {
                 <button 
                     type="submit" 
                     form="checkout-form"
-                    className="w-full mt-6 bg-primary text-white font-bold py-4 rounded-xl shadow-lg hover:bg-black transition-all active:scale-95"
+                    disabled={isSubmitting}
+                    className="w-full mt-6 bg-primary text-white font-bold py-4 rounded-xl shadow-lg hover:bg-black transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Pay ₹{grandTotal}
+                    {isSubmitting ? 'Processing Payment...' : `Pay ₹${grandTotal}`}
                 </button>
              </div>
           </div>

@@ -7,6 +7,9 @@ import { useSelector, useDispatch } from "react-redux";
 import { addToCart, removeFromCart, updateQuantity } from "../redux/slices/cartSlice";
 import { addToWishlist, removeFromWishlist } from "../redux/slices/wishlistSlice";
 
+import { useToast } from '../context/ToastContext';
+import Skeleton from '../components/common/Skeleton';
+
 const ProductDetails = () => {
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.cartItems);
@@ -17,6 +20,7 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("description");
   const [selectedImage, setSelectedImage] = useState(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -53,8 +57,42 @@ const ProductDetails = () => {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+      <div className="min-h-screen pt-14 pb-10 bg-gray-50 dark:bg-gray-900 px-4">
+        <div className="container mx-auto py-6">
+            <Skeleton className="h-4 w-48 mb-6" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <div className="space-y-4">
+                    <Skeleton className="h-[400px] w-full rounded-2xl" />
+                    <div className="flex gap-4 justify-center">
+                        {[1, 2, 3, 4].map((i) => (
+                            <Skeleton key={i} className="w-20 h-20 rounded-lg border-2 border-transparent" />
+                        ))}
+                    </div>
+                </div>
+                <div className="flex flex-col gap-5 pt-4">
+                    <Skeleton className="h-10 w-3/4 border-2 border-transparent" />
+                    <Skeleton className="h-5 w-1/2" />
+                    <div className="flex gap-4">
+                        <Skeleton className="h-6 w-16" />
+                        <Skeleton className="h-6 w-24" />
+                    </div>
+                    <div className="border-b pb-6 border-gray-200 dark:border-gray-700">
+                        <Skeleton className="h-10 w-32 mb-2" />
+                        <Skeleton className="h-6 w-24" />
+                    </div>
+                     <Skeleton className="h-8 w-1/3 mb-2" />
+                     <div className="flex gap-3">
+                        <Skeleton className="w-8 h-8 rounded-full" />
+                        <Skeleton className="w-8 h-8 rounded-full" />
+                        <Skeleton className="w-8 h-8 rounded-full" />
+                     </div>
+                    <div className="flex gap-4 mt-6">
+                         <Skeleton className="flex-1 h-14 rounded-lg" />
+                         <Skeleton className="w-14 h-14 rounded-lg" />
+                    </div>
+                </div>
+            </div>
+        </div>
       </div>
     );
   }
@@ -101,6 +139,7 @@ const ProductDetails = () => {
                         src={selectedImage} 
                         alt={product.title} 
                         className="h-full w-full object-contain group-hover:scale-110 transition-transform duration-500"
+                        loading="lazy"
                     />
                     <div className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
                         Best Seller
@@ -114,7 +153,7 @@ const ProductDetails = () => {
                             onClick={() => setSelectedImage(img)}
                             className={`w-20 h-20 bg-white dark:bg-gray-800 rounded-lg p-2 cursor-pointer border-2 transition-all ${selectedImage === img && idx === 0 ? 'border-primary' : 'border-transparent hover:border-gray-300'}`}
                         >
-                             <img src={img} alt="" className="w-full h-full object-contain" />
+                             <img src={img} alt="" className="w-full h-full object-contain" loading="lazy" />
                         </div>
                     ))}
                 </div>
@@ -155,8 +194,12 @@ const ProductDetails = () => {
                          <div className="flex items-center border-2 border-primary rounded-lg">
                              <button
                                 onClick={() => {
-                                    if (cartItem.quantity > 1) dispatch(updateQuantity({ id: cartItem.id, quantity: cartItem.quantity - 1 }));
-                                    else dispatch(removeFromCart(cartItem.id));
+                                    if (cartItem.quantity > 1) {
+                                        dispatch(updateQuantity({ id: cartItem.id, quantity: cartItem.quantity - 1 }));
+                                    } else {
+                                        dispatch(removeFromCart(cartItem.id));
+                                        addToast("Removed from cart", "info");
+                                    }
                                 }}
                                 className="px-4 py-3 text-primary hover:bg-primary hover:text-white transition-colors"
                              >
@@ -164,7 +207,10 @@ const ProductDetails = () => {
                              </button>
                              <span className="px-4 py-3 font-bold text-lg min-w-[50px] text-center">{cartItem.quantity}</span>
                              <button
-                                onClick={() => dispatch(addToCart(product))}
+                                onClick={() => {
+                                    dispatch(addToCart(product));
+                                    addToast("Quantity updated", "success");
+                                }}
                                 className="px-4 py-3 text-primary hover:bg-primary hover:text-white transition-colors"
                              >
                                 <FaPlus />
@@ -180,7 +226,10 @@ const ProductDetails = () => {
                 ) : (
                     <div className="flex gap-4 mt-2">
                         <button 
-                            onClick={() => dispatch(addToCart(product))}
+                            onClick={() => {
+                                dispatch(addToCart(product));
+                                addToast("Added to cart!", "success");
+                            }}
                             className="flex-1 bg-black text-white py-4 px-6 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-xl active:scale-95 text-lg"
                         >
                             Add to Cart
@@ -189,8 +238,10 @@ const ProductDetails = () => {
                             onClick={() => {
                                 if (wishlistItems?.find(item => item.id === product.id)) {
                                      dispatch(removeFromWishlist(product.id));
+                                     addToast("Removed from wishlist", "info");
                                 } else {
                                      dispatch(addToWishlist(product));
+                                     addToast("Added to wishlist", "success");
                                 }
                             }}
                             className="p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"

@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import Navbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/Footer";
 import Popup from "./components/Popup/Popup";
 import CartSidebar from "./components/CartSidebar/CartSidebar"; 
+import MobileBottomBar from "./components/Navbar/MobileBottomBar";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
-import MobileBottomBar from "./components/Navbar/MobileBottomBar";
-
 import { BrowserRouter, Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
-import { Suspense, lazy } from "react";
 import { useDispatch } from "react-redux";
 import { login, logout } from "./redux/slices/authSlice";
 
@@ -70,13 +68,15 @@ const UserLayout = ({ handleOrderPopup, orderPopup, setOrderPopup }) => {
 
 import { SettingsProvider } from "./context/SettingsContext";
 
+import { ToastProvider } from "./context/ToastContext";
+
 const App = () => {
   const [orderPopup, setOrderPopup] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem("token");
+      let token = localStorage.getItem("token");
       
       if (!token) {
           dispatch(logout());
@@ -84,20 +84,58 @@ const App = () => {
       }
 
       try {
-        const res = await fetch('/api/auth/me', {
+        // 1. Try to fetch user with current token
+        let res = await fetch('/api/auth/me', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
+
+        // 2. If 401, token might be expired. Try to refresh.
+        if (res.status === 401) {
+             console.log("Access Token expired, attempting refresh...");
+             try {
+                 const refreshRes = await fetch('/api/auth/refresh', { method: 'POST' });
+                 
+                 if (refreshRes.ok) {
+                     const data = await refreshRes.json();
+                     token = data.accessToken;
+                     console.log("Token refreshed successfully.");
+                     
+                     // Update LocalStorage
+                     localStorage.setItem("token", token);
+                     
+                     // Retry User Fetch with new token
+                     res = await fetch('/api/auth/me', {
+                        headers: {
+                           'Authorization': `Bearer ${token}`
+                        }
+                     });
+                 } else {
+                     console.warn("Refresh failed, logging out.");
+                     localStorage.removeItem("token");
+                     dispatch(logout());
+                     return;
+                 }
+             } catch (refreshErr) {
+                 console.error("Error during token refresh:", refreshErr);
+                 localStorage.removeItem("token");
+                 dispatch(logout());
+                 return;
+             }
+        }
+
         if (res.ok) {
           const userData = await res.json();
           dispatch(login(userData)); 
         } else {
+          // If still not ok after refresh attempt
           localStorage.removeItem("token");
           dispatch(logout());
         }
       } catch (error) {
          console.error("Auth check failed", error);
+         // Optionally logout on network error if strict
       }
     };
     
@@ -121,41 +159,43 @@ const App = () => {
   return (
     <BrowserRouter>
      <SettingsProvider>
-      <ScrollToTop />
-      <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen font-outfit">
-        <Suspense fallback={<Loading />}>
-          <Routes>
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminGuard />}>
-                <Route element={<AdminLayout />}>
-                    <Route index element={<Navigate to="dashboard" replace />} />
-                    <Route path="dashboard" element={<AdminDashboard />} />
-                    <Route path="products" element={<ProductManagement />} />
-                    <Route path="orders" element={<OrderManagement />} />
-                    <Route path="users" element={<UsersManagement />} />
-                    <Route path="analytics" element={<Analytics />} />
-                    <Route path="settings" element={<Settings />} />
-                    <Route path="categories" element={<CategoryManagement />} />
-                </Route>
-            </Route>
+      <ToastProvider>
+        <ScrollToTop />
+        <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen font-outfit">
+          <Suspense fallback={<Loading />}>
+            <Routes>
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminGuard />}>
+                  <Route element={<AdminLayout />}>
+                      <Route index element={<Navigate to="dashboard" replace />} />
+                      <Route path="dashboard" element={<AdminDashboard />} />
+                      <Route path="products" element={<ProductManagement />} />
+                      <Route path="orders" element={<OrderManagement />} />
+                      <Route path="users" element={<UsersManagement />} />
+                      <Route path="analytics" element={<Analytics />} />
+                      <Route path="settings" element={<Settings />} />
+                      <Route path="categories" element={<CategoryManagement />} />
+                  </Route>
+              </Route>
 
-            {/* Consumer App Routes */}
-            <Route element={<UserLayout handleOrderPopup={handleOrderPopup} orderPopup={orderPopup} setOrderPopup={setOrderPopup} />}>
-                <Route path="/" element={<Home handleOrderPopup={handleOrderPopup} />} />
-                <Route path="/category/:category" element={<CategoryPage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/product/:id" element={<ProductDetails />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/order-success" element={<OrderSuccess />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/wishlist" element={<Wishlist />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-            </Route>
-          </Routes>
-        </Suspense>
-      </div>
+              {/* Consumer App Routes */}
+              <Route element={<UserLayout handleOrderPopup={handleOrderPopup} orderPopup={orderPopup} setOrderPopup={setOrderPopup} />}>
+                  <Route path="/" element={<Home handleOrderPopup={handleOrderPopup} />} />
+                  <Route path="/category/:category" element={<CategoryPage />} />
+                  <Route path="/search" element={<SearchPage />} />
+                  <Route path="/product/:id" element={<ProductDetails />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/order-success" element={<OrderSuccess />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/wishlist" element={<Wishlist />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+              </Route>
+            </Routes>
+          </Suspense>
+        </div>
+      </ToastProvider>
      </SettingsProvider>
     </BrowserRouter>
   );

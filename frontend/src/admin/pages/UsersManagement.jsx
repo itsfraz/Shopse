@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
-import { useToast } from '../components/shared/Toast';
+import { useToast } from '../../context/ToastContext';
 import { 
     Search, 
     MoreHorizontal, 

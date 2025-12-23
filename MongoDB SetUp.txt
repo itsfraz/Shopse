@@ -5,4 +5,6 @@ Add New Database User
 Boat-AP
 isO2JHtotx8nPOnJ
 
-mongodb+srv://Boat-AP:isO2JHtotx8nPOnJ@boatapp.nlobih4.mongodb.net/
+mongodb+srv://Boat-AP:password@boatapp.nlobih4.mongodb.net/
+Email: admin@example.com
+Password: password123

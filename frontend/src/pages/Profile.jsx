@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { FaBox, FaUser, FaSignOutAlt, FaMapMarkerAlt, FaHeart, FaTrash } from "react-icons/fa";
+import { FaBox, FaUser, FaSignOutAlt, FaMapMarkerAlt, FaHeart, FaTrash, FaDownload } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { addToCart } from "../redux/slices/cartSlice";
 import { removeFromWishlist } from "../redux/slices/wishlistSlice";
 import { logout } from "../redux/slices/authSlice";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { downloadInvoice } from "../utils/downloadHelpers";
+import { useToast } from "../context/ToastContext";
 
 const Profile = () => {
   const [params, setParams] = useSearchParams();
@@ -20,6 +22,8 @@ const Profile = () => {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [orderError, setOrderError] = useState(null);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const { addToast } = useToast();
 
   // Sync activeTab with URL params
   useEffect(() => {
@@ -220,10 +224,16 @@ const Profile = () => {
                                              <span className="text-xs text-gray-500 uppercase tracking-wide font-bold">Total</span>
                                              <p className="font-bold text-primary">₹{order.totalPrice}</p>
                                         </div>
-                                         <div className="text-right">
+                                        <div className="text-right flex flex-col items-end gap-2">
                                             <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${order.isDelivered ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'}`}>
                                                 {order.isDelivered ? 'Delivered' : 'Processing'}
                                             </span>
+                                            <button 
+                                                onClick={() => downloadInvoice(order)}
+                                                className="flex items-center gap-1 text-xs font-bold text-primary hover:text-black transition-colors"
+                                            >
+                                                <FaDownload /> Invoice
+                                            </button>
                                         </div>
                                     </div>
                                     <div className="space-y-4">
@@ -251,6 +261,7 @@ const Profile = () => {
                         <h2 className="text-2xl font-bold mb-8 dark:text-white">Profile Details</h2>
                          <form onSubmit={async (e) => {
                                 e.preventDefault();
+                                setIsUpdating(true);
                                 const formData = new FormData(e.target);
                                 const profileData = {
                                     name: formData.get('name'),
@@ -272,19 +283,21 @@ const Profile = () => {
                                         const updatedUser = await res.json();
                                         // Update Redux state
                                          dispatch({ type: 'auth/login', payload: updatedUser }); 
-                                         alert("Profile updated successfully!");
+                                         addToast("Profile updated successfully!", "success");
                                     } else {
-                                        alert("Failed to update profile.");
+                                        addToast("Failed to update profile.", "error");
                                     }
                                 } catch (error) {
                                     console.error(error);
-                                    alert("Something went wrong.");
+                                    addToast("Something went wrong.", "error");
+                                } finally {
+                                    setIsUpdating(false);
                                 }
                             }}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">Full Name</label>
-                                    <input name="name" type="text" defaultValue={user.name} className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" />
+                                    <input name="name" type="text" defaultValue={user.name} disabled={isUpdating} className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all disabled:opacity-50" />
                                 </div>
                                 <div>
                                     <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">Role</label>
@@ -297,10 +310,12 @@ const Profile = () => {
                             </div>
                             <div>
                                 <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">Phone Number</label>
-                                <input name="mobile" type="tel" defaultValue={user.mobile || ''} placeholder="Add mobile number" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" />
+                                <input name="mobile" type="tel" defaultValue={user.mobile || ''} disabled={isUpdating} placeholder="Add mobile number" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all disabled:opacity-50" />
                             </div>
                             <div className="pt-4">
-                                <button type="submit" className="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-black transition-colors shadow-lg active:scale-95">Save Changes</button>
+                                <button type="submit" disabled={isUpdating} className="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-black transition-colors shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    {isUpdating ? 'Saving...' : 'Save Changes'}
+                                </button>
                             </div>
                          </form>
                     </div>
@@ -354,6 +369,7 @@ const Profile = () => {
                         ) : (
                             <form onSubmit={async (e) => {
                                 e.preventDefault();
+                                setIsUpdating(true);
                                 const formData = new FormData(e.target);
                                 const addressData = {
                                     street: formData.get('street'),
@@ -378,48 +394,51 @@ const Profile = () => {
                                         const updatedUser = await res.json();
                                         // Update Redux state
                                         dispatch({ type: 'auth/login', payload: updatedUser }); 
-                                        alert("Address updated successfully!");
+                                        addToast("Address updated successfully!", "success");
                                         setIsEditingAddress(false); // Switch back to view mode
                                     } else {
-                                        alert("Failed to update address.");
+                                        addToast("Failed to update address.", "error");
                                     }
                                 } catch (error) {
                                     console.error(error);
-                                    alert("Something went wrong.");
+                                    addToast("Something went wrong.", "error");
+                                } finally {
+                                    setIsUpdating(false);
                                 }
                             }}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                     <div>
                                         <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">Street Address</label>
-                                        <input name="street" defaultValue={user.address?.street || ''} type="text" placeholder="123 Main St" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" required />
+                                        <input name="street" defaultValue={user.address?.street || ''} type="text" disabled={isUpdating} placeholder="123 Main St" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all disabled:opacity-50" required />
                                     </div>
                                     <div>
                                         <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">City</label>
-                                        <input name="city" defaultValue={user.address?.city || ''} type="text" placeholder="City" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" required />
+                                        <input name="city" defaultValue={user.address?.city || ''} type="text" disabled={isUpdating} placeholder="City" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all disabled:opacity-50" required />
                                     </div>
                                     <div>
                                         <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">State</label>
-                                        <input name="state" defaultValue={user.address?.state || ''} type="text" placeholder="State" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" required />
+                                        <input name="state" defaultValue={user.address?.state || ''} type="text" disabled={isUpdating} placeholder="State" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all disabled:opacity-50" required />
                                     </div>
                                     <div>
                                         <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">Zip Code</label>
-                                        <input name="zip" defaultValue={user.address?.zip || ''} type="text" placeholder="Zip Code" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" required />
+                                        <input name="zip" defaultValue={user.address?.zip || ''} type="text" disabled={isUpdating} placeholder="Zip Code" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all disabled:opacity-50" required />
                                     </div>
                                     <div>
                                         <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">Country</label>
-                                        <input name="country" defaultValue={user.address?.country || 'India'} type="text" placeholder="Country" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all" required />
+                                        <input name="country" defaultValue={user.address?.country || 'India'} type="text" disabled={isUpdating} placeholder="Country" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-primary transition-all disabled:opacity-50" required />
                                     </div>
                                 </div>
                                 <div className="flex justify-end gap-3">
                                     <button 
                                         type="button" 
                                         onClick={() => setIsEditingAddress(false)}
-                                        className="px-6 py-3 rounded-lg font-bold text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors"
+                                        disabled={isUpdating}
+                                        className="px-6 py-3 rounded-lg font-bold text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors disabled:opacity-50"
                                     >
                                         Cancel
                                     </button>
-                                    <button type="submit" className="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-black transition-colors shadow-lg">
-                                        Save Address
+                                    <button type="submit" disabled={isUpdating} className="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-black transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                                        {isUpdating ? 'Saving...' : 'Save Address'}
                                     </button>
                                 </div>
                             </form>

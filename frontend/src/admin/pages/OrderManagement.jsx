@@ -14,6 +14,8 @@ import {
     Loader
 } from 'lucide-react';
 
+import { downloadInvoice, exportToCSV } from '../../utils/downloadHelpers';
+
 const OrderDetailsModal = ({ isOpen, onClose, order, onUpdateStatus }) => {
     if (!isOpen || !order) return null;
 
@@ -99,7 +101,10 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onUpdateStatus }) => {
                 </div>
                 
                 <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 bg-gray-50 dark:bg-gray-800/50">
-                     <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                     <button 
+                        onClick={() => downloadInvoice(order)}
+                        className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                     >
                         <Download size={18} />
                         Invoice PDF
                      </button>
@@ -183,6 +188,20 @@ const OrderManagement = () => {
         }
     };
 
+    const handleExport = () => {
+        const exportData = orders.map(order => ({
+            OrderID: order._id,
+            CustomerName: order.user?.name || 'Guest',
+            CustomerEmail: order.user?.email || order.shippingAddress?.email,
+            Date: new Date(order.createdAt).toLocaleDateString(),
+            Total: order.totalPrice,
+            PaymentMethod: order.paymentMethod,
+            IsPaid: order.isPaid ? 'Yes' : 'No',
+            IsDelivered: order.isDelivered ? 'Yes' : 'No'
+        }));
+        exportToCSV(exportData, `orders_export_${new Date().toISOString().split('T')[0]}.csv`);
+    };
+
     const getStatusColor = (order) => {
         if (order.isDelivered) return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
         if (order.isPaid) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
@@ -215,7 +234,10 @@ const OrderManagement = () => {
                     <button className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-500 hover:text-blue-600 hover:border-blue-500 transition-all">
                         <Filter size={20} />
                     </button>
-                    <button className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:text-white">
+                    <button 
+                        onClick={handleExport}
+                        className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:text-white"
+                    >
                         Export
                     </button>
                 </div>
