@@ -69,7 +69,8 @@ const Login = () => {
                 name: data.name,
                 email: data.email,
                 role: data.role,
-                mobile: data.mobile
+                mobile: data.mobile,
+                address: data.address
             }));
             
             addToast(`Welcome back, ${data.name}!`, 'success');
